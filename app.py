@@ -126,7 +126,91 @@ td,th{padding:14px;border-bottom:1px solid #333;text-align:left}
 .sidebar{display:block}
 .search input{width:210px}
 }
+@media (max-width: 800px) {
+
+  body {
+    background: radial-gradient(circle at top, #5b3c88, #171717 60%, #000);
+  }
+
+  .page {
+    display: block;
+    padding: 0;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .main {
+    min-height: 100vh;
+    border-radius: 0;
+    background: linear-gradient(160deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05));
+    backdrop-filter: blur(20px);
+  }
+
+  .topbar {
+    height: auto;
+    padding: 18px;
+    background: transparent;
+    display: block;
+  }
+
+  .search input {
+    width: 100%;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(15px);
+  }
+
+  .content {
+    padding: 18px;
+  }
+
+  .hero {
+    border-radius: 28px;
+    background: rgba(255,255,255,0.14);
+    backdrop-filter: blur(22px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+
+  .grid {
+    display: block;
+  }
+
+  .row {
+    display: block;
+    overflow: visible;
+  }
+
+  .card {
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 18px;
+    border-radius: 26px;
+    background: rgba(255,255,255,0.13);
+    backdrop-filter: blur(22px);
+    box-shadow: 0 20px 45px rgba(0,0,0,0.35);
+  }
+
+  .cover {
+    height: 260px;
+    border-radius: 26px;
+  }
+
+  audio {
+    margin-top: 14px;
+  }
+
+  .small {
+    background: rgba(255,255,255,0.18);
+  }
+
+  h1, h2, h3 {
+    color: white;
+  }
+}
 </style>
+
+
 """
 
 BASE_HTML_START = """
@@ -585,3 +669,5 @@ if __name__ == "__main__":
     print("Smartify Developer-Customer App Running")
     print("Local URL: http://127.0.0.1:8000")
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), debug=False)
+
+
