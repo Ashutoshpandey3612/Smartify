@@ -1,8 +1,6 @@
 # Smartify - Developer Customer Music App
 
-## Developer Login
-Username: admin
-Password: admin123
+
 
 ## Customer Flow
 1. Customer registers account.
