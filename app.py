@@ -434,6 +434,51 @@ body{overflow:auto;background:radial-gradient(circle at top,#302a33,#08080b 55%,
 .controls .control:not(.play),.volume{display:none}
 .play{width:46px;height:46px}
 }
+
+.mobile-bottom-nav{
+  display:none;
+}
+@media(max-width:850px){
+  .mobile-bottom-nav{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    height:76px;
+    z-index:80;
+    background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.96));
+    backdrop-filter:blur(22px);
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    align-items:center;
+    border-top:1px solid rgba(255,255,255,.08);
+  }
+  .mobile-bottom-nav a{
+    color:#c9c9d3;
+    text-decoration:none;
+    text-align:center;
+    font-size:11px;
+    font-weight:600;
+  }
+  .mobile-bottom-nav a span{
+    display:block;
+    font-size:23px;
+    margin-bottom:4px;
+  }
+  .mobile-bottom-nav a.active{
+    color:white;
+    text-shadow:0 0 14px rgba(250,35,59,.55);
+  }
+  .mobile-bottom-nav a.active span{
+    filter:drop-shadow(0 0 10px rgba(250,35,59,.65));
+  }
+  .player{
+    bottom:76px !important;
+  }
+  .app{
+    padding-bottom:170px !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -515,6 +560,14 @@ body{overflow:auto;background:radial-gradient(circle at top,#302a33,#08080b 55%,
 <div class="controls"><button class="control">⏮</button><button class="control play" id="playBtn">▶</button><button class="control">⏭</button></div>
 <div class="volume">🔊 ━━━━━</div>
 </footer>
+
+<nav class="mobile-bottom-nav">
+  <a class="active" href="/home"><span>🏠</span>Home</a>
+  <a href="/home"><span>🔍</span>Search</a>
+  <a href="/home?mood=trending&level=medium"><span>🎧</span>Library</a>
+  <a href="/wallet"><span>🎁</span>Rewards</a>
+  <a href="/youtube?q={{query}}"><span>➕</span>Create</a>
+</nav>
 </div>
 
 <audio id="audio" class="hidden-audio" {% if songs %}src="{{songs[0].preview}}"{% endif %}></audio>
@@ -814,6 +867,46 @@ body{
   .actions{justify-content:space-between}
   .lyrics{border-radius:24px}
 }
+
+.bottom-nav{
+  display:none;
+}
+@media(max-width:850px){
+  .bottom-nav{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    height:76px;
+    z-index:90;
+    background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.96));
+    backdrop-filter:blur(22px);
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    align-items:center;
+    border-top:1px solid rgba(255,255,255,.08);
+  }
+  .bottom-nav a{
+    color:#c9c9d3;
+    text-decoration:none;
+    text-align:center;
+    font-size:11px;
+    font-weight:600;
+  }
+  .bottom-nav a span{
+    display:block;
+    font-size:23px;
+    margin-bottom:4px;
+  }
+  .bottom-nav a.active{
+    color:white;
+    text-shadow:0 0 14px rgba(250,35,59,.55);
+  }
+  .bottom-nav a.active span{
+    filter:drop-shadow(0 0 10px rgba(250,35,59,.65));
+  }
+  .page{padding-bottom:100px!important}
+}
 </style>
 </head>
 <body>
@@ -880,6 +973,14 @@ body{
   </div>
   {% endif %}
 </div>
+
+<nav class="bottom-nav">
+  <a href="/home"><span>🏠</span>Home</a>
+  <a href="/home"><span>🔍</span>Search</a>
+  <a class="active" href="/youtube?q={{q}}"><span>🎧</span>Playing</a>
+  <a href="/wallet"><span>🎁</span>Rewards</a>
+  <a href="/home"><span>➕</span>Create</a>
+</nav>
 
 <script>
 document.querySelectorAll(".title").forEach(el=>{
