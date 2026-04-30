@@ -196,7 +196,7 @@ def get_youtube_video(query="arijit song"):
             "video_id": video_id,
             "title": title,
             "channel": channel,
-            "embed_url": f"https://www.youtube.com/embed/{video_id}?autoplay=1&rel=0",
+            "embed_url": f"https://www.youtube.com/embed/{video_id}?autoplay=1&rel=0&enablejsapi=1",
             "watch_url": f"https://www.youtube.com/watch?v={video_id}"
         }
     except Exception as e:
@@ -697,19 +697,21 @@ body{
   border-radius:999px;
   background:rgba(255,255,255,.16);
   position:relative;
+  cursor:pointer;
+  --progress:0%;
 }
 .bar:before{
   content:"";
   position:absolute;
   inset:0 auto 0 0;
-  width:42%;
+  width:var(--progress);
   border-radius:999px;
   background:#fff;
 }
 .bar:after{
   content:"";
   position:absolute;
-  left:42%;
+  left:var(--progress);
   top:50%;
   transform:translate(-50%,-50%);
   width:15px;
@@ -730,7 +732,17 @@ body{
   color:#f2f2f6;
   opacity:.9;
 }
+.control-btn{
+  border:0;
+  background:transparent;
+  cursor:pointer;
+}
+.control-btn:hover{
+  opacity:.75;
+}
 .pause{
+  border:0;
+  cursor:pointer;
   width:78px;
   height:78px;
   border-radius:50%;
@@ -822,7 +834,7 @@ body{
   <div class="player-card">
     <div class="player-layout">
       <div class="video-box">
-        <iframe src="{{video.embed_url}}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        <iframe id="ytPlayer" src="{{video.embed_url}}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
       </div>
 
       <div>
@@ -831,17 +843,17 @@ body{
         <p class="channel">{{video.channel}}</p>
 
         <div class="progress">
-          <span>0:00</span>
-          <div class="bar"></div>
-          <span>Full</span>
+          <span id="currentTime">0:00</span>
+          <div class="bar" id="progressBar"></div>
+          <span id="durationTime">Full</span>
         </div>
 
         <div class="controls">
-          <span class="icon">↝</span>
-          <span class="icon">⏮</span>
-          <div class="pause">Ⅱ</div>
-          <span class="icon">⏭</span>
-          <span class="icon">↻</span>
+          <button class="icon control-btn" id="muteBtn" type="button">🔊</button>
+          <button class="icon control-btn" id="backBtn" type="button">⏪</button>
+          <button class="pause control-btn" id="playPauseBtn" type="button">Ⅱ</button>
+          <button class="icon control-btn" id="forwardBtn" type="button">⏩</button>
+          <button class="icon control-btn" id="restartBtn" type="button">↻</button>
         </div>
 
         <div class="actions">
@@ -875,7 +887,98 @@ document.querySelectorAll(".title").forEach(el=>{
   t.innerHTML=el.innerHTML;
   el.innerText=t.value;
 });
+
+let ytPlayer;
+let progressTimer;
+
+function formatTime(sec){
+  sec = Math.max(0, Math.floor(sec || 0));
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return m + ":" + String(s).padStart(2, "0");
+}
+
+function updateProgress(){
+  if(!ytPlayer || !ytPlayer.getDuration) return;
+  const duration = ytPlayer.getDuration();
+  const current = ytPlayer.getCurrentTime();
+  if(duration > 0){
+    const percent = Math.min(100, Math.max(0, (current / duration) * 100));
+    document.getElementById("progressBar").style.setProperty("--progress", percent + "%");
+    document.getElementById("currentTime").innerText = formatTime(current);
+    document.getElementById("durationTime").innerText = formatTime(duration);
+  }
+}
+
+function onYouTubeIframeAPIReady(){
+  ytPlayer = new YT.Player("ytPlayer", {
+    events: {
+      "onReady": function(){
+        bindPlayerControls();
+        progressTimer = setInterval(updateProgress, 700);
+      },
+      "onStateChange": function(event){
+        const btn = document.getElementById("playPauseBtn");
+        if(event.data === YT.PlayerState.PLAYING){
+          btn.innerText = "Ⅱ";
+        }else if(event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED){
+          btn.innerText = "▶";
+        }
+      }
+    }
+  });
+}
+
+function bindPlayerControls(){
+  const playBtn = document.getElementById("playPauseBtn");
+  const backBtn = document.getElementById("backBtn");
+  const forwardBtn = document.getElementById("forwardBtn");
+  const restartBtn = document.getElementById("restartBtn");
+  const muteBtn = document.getElementById("muteBtn");
+  const progressBar = document.getElementById("progressBar");
+
+  playBtn.addEventListener("click", ()=>{
+    const state = ytPlayer.getPlayerState();
+    if(state === YT.PlayerState.PLAYING){
+      ytPlayer.pauseVideo();
+      playBtn.innerText = "▶";
+    }else{
+      ytPlayer.playVideo();
+      playBtn.innerText = "Ⅱ";
+    }
+  });
+
+  backBtn.addEventListener("click", ()=>{
+    ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 10), true);
+  });
+
+  forwardBtn.addEventListener("click", ()=>{
+    ytPlayer.seekTo(Math.min(ytPlayer.getDuration(), ytPlayer.getCurrentTime() + 10), true);
+  });
+
+  restartBtn.addEventListener("click", ()=>{
+    ytPlayer.seekTo(0, true);
+    ytPlayer.playVideo();
+  });
+
+  muteBtn.addEventListener("click", ()=>{
+    if(ytPlayer.isMuted()){
+      ytPlayer.unMute();
+      muteBtn.innerText = "🔊";
+    }else{
+      ytPlayer.mute();
+      muteBtn.innerText = "🔇";
+    }
+  });
+
+  progressBar.addEventListener("click", (e)=>{
+    const rect = progressBar.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    ytPlayer.seekTo(ytPlayer.getDuration() * ratio, true);
+  });
+}
 </script>
+<script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
 """
