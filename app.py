@@ -1,45 +1,25 @@
 import os
 import sqlite3
-import time
+import requests
 from functools import wraps
 from datetime import timedelta, date
 from urllib.parse import quote_plus
-from flask import Flask, render_template_string, request, redirect, session, send_file, jsonify
+from flask import Flask, render_template_string, request, redirect, session, jsonify
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "ashplex_secret")
 app.permanent_session_lifetime = timedelta(days=30)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "ashplex.db")
-MUSIC_DIR = os.path.join(BASE_DIR, "static", "music")
-COVER_DIR = os.path.join(BASE_DIR, "static", "covers")
-
-os.makedirs(MUSIC_DIR, exist_ok=True)
-os.makedirs(COVER_DIR, exist_ok=True)
+DB_PATH = os.path.join(BASE_DIR, "ashplex_users.db")
 
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "ashutosh")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Ashplex@123")
-
-ALLOWED_AUDIO = {"mp3", "wav", "ogg", "m4a"}
-ALLOWED_IMAGE = {"jpg", "jpeg", "png", "webp"}
 
 def db():
     con = sqlite3.connect(DB_PATH)
     con.row_factory = sqlite3.Row
     return con
-
-def allowed(filename, allowed_set):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_set
-
-def safe_name(name):
-    keep = []
-    for ch in name:
-        if ch.isalnum() or ch in ("-", "_", "."):
-            keep.append(ch)
-        else:
-            keep.append("_")
-    return "".join(keep)
 
 def init_db():
     con = db()
@@ -55,38 +35,6 @@ def init_db():
     """)
 
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS songs(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        artist TEXT NOT NULL,
-        mood TEXT NOT NULL,
-        level TEXT DEFAULT 'medium',
-        filename TEXT NOT NULL,
-        cover TEXT DEFAULT '',
-        play_count INTEGER DEFAULT 0,
-        like_count INTEGER DEFAULT 0,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS history(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        song_id INTEGER,
-        played_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS likes(
-        username TEXT,
-        song_id INTEGER,
-        UNIQUE(username, song_id)
-    )
-    """)
-
-    cur.execute("""
     CREATE TABLE IF NOT EXISTS user_stats(
         username TEXT PRIMARY KEY,
         total_plays INTEGER DEFAULT 0,
@@ -97,11 +45,19 @@ def init_db():
     )
     """)
 
-    cur.execute("SELECT * FROM users WHERE username=?", (ADMIN_USERNAME,))
-    if not cur.fetchone():
+    cur.execute("SELECT * FROM users WHERE role='developer'")
+    dev = cur.fetchone()
+
+    if not dev:
         cur.execute(
             "INSERT INTO users(username,password,role) VALUES(?,?,?)",
             (ADMIN_USERNAME, ADMIN_PASSWORD, "developer")
+        )
+    else:
+        # Keep developer login updated with current code credentials
+        cur.execute(
+            "UPDATE users SET username=?, password=? WHERE role='developer'",
+            (ADMIN_USERNAME, ADMIN_PASSWORD)
         )
 
     con.commit()
@@ -127,46 +83,150 @@ def developer_required(f):
         return f(*args, **kwargs)
     return wrapper
 
-def song_to_dict(row):
-    return {
-        "id": row["id"],
-        "title": row["title"],
-        "artist": row["artist"],
-        "mood": row["mood"],
-        "level": row["level"],
-        "cover_url": f"/static/covers/{row['cover']}" if row["cover"] else "",
-        "stream_url": f"/api/stream/{row['id']}",
-        "youtube_url": youtube_search_url(row["title"], row["artist"]),
-        "play_count": row["play_count"],
-        "like_count": row["like_count"]
+def ai_mood_query(mood="trending", level="medium"):
+    mood = (mood or "trending").lower()
+    level = (level or "medium").lower()
+
+    mood_map = {
+        "happy": {
+            "low": "happy acoustic chill",
+            "medium": "happy bollywood hits",
+            "high": "party dance energetic"
+        },
+        "sad": {
+            "low": "soft sad acoustic",
+            "medium": "sad hindi songs",
+            "high": "heartbreak emotional songs"
+        },
+        "romantic": {
+            "low": "soft romantic",
+            "medium": "romantic bollywood",
+            "high": "love songs passionate"
+        },
+        "focus": {
+            "low": "calm piano focus",
+            "medium": "lofi focus beats",
+            "high": "deep focus electronic"
+        },
+        "relax": {
+            "low": "meditation calm music",
+            "medium": "relaxing chill songs",
+            "high": "chill house lounge"
+        },
+        "workout": {
+            "low": "warmup workout songs",
+            "medium": "gym workout music",
+            "high": "high energy workout"
+        },
+        "angry": {
+            "low": "dark chill music",
+            "medium": "rock intense songs",
+            "high": "aggressive workout music"
+        },
+        "trending": {
+            "low": "acoustic hits",
+            "medium": "arijit",
+            "high": "trending dance hits"
+        }
     }
 
-def ai_query_filter(mood, level):
-    mood = (mood or "").lower()
-    level = (level or "").lower()
-    where = []
-    params = []
-
-    if mood and mood != "all":
-        where.append("mood=?")
-        params.append(mood)
-
-    if level and level != "all":
-        where.append("level=?")
-        params.append(level)
-
-    return where, params
-
+    return mood_map.get(mood, mood_map["trending"]).get(level, mood_map["trending"]["medium"])
 
 def youtube_search_url(title="", artist="", query=""):
     if query:
-        text = query + " song"
+        search_text = query + " song"
     else:
-        text = f"{title} {artist} song"
-    return "https://www.youtube.com/results?search_query=" + quote_plus(text)
+        search_text = f"{title} {artist} song"
+    return "https://www.youtube.com/results?search_query=" + quote_plus(search_text)
 
 def youtube_embed_url(query=""):
     return "https://www.youtube.com/embed?listType=search&list=" + quote_plus(query + " song")
+
+def get_deezer_songs(query="arijit"):
+    try:
+        url = f"https://api.deezer.com/search?q={quote_plus(query)}"
+        data = requests.get(url, timeout=10).json()
+
+        songs = []
+        for s in data.get("data", [])[:18]:
+            title = s.get("title", "Unknown")
+            artist = s.get("artist", {}).get("name", "Unknown")
+            cover = (
+                s.get("album", {}).get("cover_xl")
+                or s.get("album", {}).get("cover_big")
+                or s.get("album", {}).get("cover_medium", "")
+            )
+
+            songs.append({
+                "id": s.get("id"),
+                "title": title,
+                "artist": artist,
+                "cover": cover,
+                "preview": s.get("preview", ""),
+                "youtube_url": youtube_search_url(title, artist),
+                "source": "Deezer + YouTube"
+            })
+        return songs
+    except Exception:
+        return []
+
+def update_user_activity(username):
+    today = str(date.today())
+
+    con = db()
+    cur = con.cursor()
+    cur.execute("SELECT * FROM user_stats WHERE username=?", (username,))
+    stat = cur.fetchone()
+
+    reward_added = 0
+
+    if not stat:
+        cur.execute("""
+            INSERT INTO user_stats(username, total_plays, today_plays, total_rewards, last_reward_date, last_play_date)
+            VALUES(?,?,?,?,?,?)
+        """, (username, 1, 1, 0, "", today))
+        today_plays = 1
+        total_rewards = 0
+    else:
+        if stat["last_play_date"] == today:
+            today_plays = stat["today_plays"] + 1
+        else:
+            today_plays = 1
+
+        total_rewards = stat["total_rewards"]
+
+        if today_plays >= 20 and stat["last_reward_date"] != today:
+            reward_added = 10
+            total_rewards += 10
+            cur.execute("""
+                UPDATE user_stats
+                SET total_plays = total_plays + 1,
+                    today_plays = ?,
+                    total_rewards = ?,
+                    last_reward_date = ?,
+                    last_play_date = ?
+                WHERE username=?
+            """, (today_plays, total_rewards, today, today, username))
+        else:
+            cur.execute("""
+                UPDATE user_stats
+                SET total_plays = total_plays + 1,
+                    today_plays = ?,
+                    total_rewards = ?,
+                    last_play_date = ?
+                WHERE username=?
+            """, (today_plays, total_rewards, today, username))
+
+    con.commit()
+    con.close()
+
+    return {
+        "today_plays": today_plays,
+        "total_rewards": total_rewards,
+        "reward_added": reward_added,
+        "target": 20,
+        "target_achieved": today_plays >= 20
+    }
 
 LOGIN_HTML = """
 <!DOCTYPE html>
@@ -256,8 +316,9 @@ body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-sy
 .hero{display:grid;grid-template-columns:250px 1fr;gap:30px;align-items:end;min-height:300px;padding:28px;border-radius:34px;background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.04)),radial-gradient(circle at top right,rgba(250,35,59,.42),transparent 40%);border:1px solid rgba(255,255,255,.12);box-shadow:0 28px 90px rgba(0,0,0,.35);margin-bottom:28px}.hero-cover{width:250px;height:250px;border-radius:30px;overflow:hidden;box-shadow:0 25px 70px rgba(0,0,0,.55);background:#222}.hero-cover img{width:100%;height:100%;object-fit:cover}.hero h1{font-size:64px;line-height:.95;letter-spacing:-2px;margin-bottom:12px}.hero p{color:#d5d5df;font-size:16px;margin-bottom:22px}.eyebrow{color:var(--red2);text-transform:uppercase;font-size:12px;font-weight:800;letter-spacing:1.6px;margin-bottom:10px}
 .btn{display:inline-flex;align-items:center;justify-content:center;border:0;text-decoration:none;color:white;font-weight:750;padding:13px 22px;border-radius:999px;background:var(--red);cursor:pointer}.btn.secondary{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12)}
 .mood-ai-box{margin:0 0 24px;padding:18px;border-radius:24px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);backdrop-filter:blur(20px)}.mood-ai-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.mood-ai-head h3{font-size:18px}.ai-badge{font-size:12px;color:#ffb3bd;background:rgba(250,35,59,.16);padding:7px 11px;border-radius:999px}.mood-ai-form{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}.mood-ai-form label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}.mood-ai-form select{width:100%;padding:13px 14px;border:0;outline:none;border-radius:16px;color:white;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.10)}
+.hybrid-box{margin:0 0 24px;padding:18px;border-radius:24px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10)}.source-badge{display:inline-block;margin-top:8px;padding:6px 10px;border-radius:999px;background:rgba(250,35,59,.16);color:#ffb3bd;font-size:12px;text-decoration:none}
 .section-row{display:flex;align-items:center;justify-content:space-between;margin:10px 0 16px}.section-row h2{font-size:26px}.section-row span{color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:20px}.card{background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:14px;transition:.25s;cursor:pointer}.card:hover{transform:translateY(-7px);background:rgba(255,255,255,.10);box-shadow:0 22px 55px rgba(0,0,0,.35)}.card-cover{width:100%;aspect-ratio:1/1;border-radius:18px;overflow:hidden;background:#222;margin-bottom:12px;position:relative}.card-cover img{width:100%;height:100%;object-fit:cover}.play-badge{position:absolute;right:10px;bottom:10px;width:42px;height:42px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s}.card:hover .play-badge{opacity:1}.card h3{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}.card p{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.yt-btn{display:inline-flex;margin-top:10px;padding:8px 11px;border-radius:999px;background:#ff0033;color:white;text-decoration:none;font-size:12px;font-weight:800}.hybrid-box{margin:0 0 24px;padding:18px;border-radius:24px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10)}.yt-frame{width:100%;height:315px;border:0;border-radius:22px;background:#000;margin-top:14px}.source-badge{display:inline-block;margin-top:8px;padding:6px 10px;border-radius:999px;background:rgba(250,35,59,.16);color:#ffb3bd;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:20px}.card{background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:14px;transition:.25s;cursor:pointer}.card:hover{transform:translateY(-7px);background:rgba(255,255,255,.10);box-shadow:0 22px 55px rgba(0,0,0,.35)}.card-cover{width:100%;aspect-ratio:1/1;border-radius:18px;overflow:hidden;background:#222;margin-bottom:12px;position:relative}.card-cover img{width:100%;height:100%;object-fit:cover}.play-badge{position:absolute;right:10px;bottom:10px;width:42px;height:42px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s}.card:hover .play-badge{opacity:1}.card h3{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}.card p{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.yt-btn{display:inline-flex;margin-top:10px;padding:8px 11px;border-radius:999px;background:#ff0033;color:white;text-decoration:none;font-size:12px;font-weight:800}
 .player{grid-column:1/3;background:rgba(12,12,16,.92);backdrop-filter:blur(28px);border-top:1px solid rgba(255,255,255,.10);display:grid;grid-template-columns:320px 1fr 260px;align-items:center;padding:14px 28px;z-index:20}.now{display:flex;align-items:center;gap:14px;min-width:0}.now-cover{width:60px;height:60px;border-radius:14px;overflow:hidden;background:#222}.now-cover img{width:100%;height:100%;object-fit:cover}.now h3{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.now p{color:var(--muted);font-size:12px}.controls{display:flex;align-items:center;justify-content:center;gap:18px}.control{border:0;color:white;background:transparent;font-size:22px;cursor:pointer}.play{width:46px;height:46px;border-radius:50%;background:white;color:#000}.hidden-audio{display:none}.volume{justify-self:end;color:#aaa}
 @media(max-width:850px){body{overflow:auto}.app{display:block;min-height:100vh;height:auto;padding-bottom:92px}.sidebar{display:none}.main{padding:18px 16px 120px;min-height:100vh}.topbar{display:block}.search{max-width:none;margin-bottom:14px}.user-pill{display:inline-block}.hero{display:block;padding:20px;border-radius:28px;min-height:auto}.hero-cover{width:100%;height:auto;aspect-ratio:1/1;max-width:330px;margin:0 auto 22px}.hero div:last-child{text-align:center}.hero h1{font-size:46px}.mood-ai-form{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.card{display:grid;grid-template-columns:86px 1fr;gap:14px;align-items:center}.card-cover{margin:0}.player{position:fixed;left:0;right:0;bottom:0;grid-template-columns:1fr auto;padding:12px 16px}.controls .control:not(.play),.volume{display:none}}
 </style>
@@ -272,41 +333,41 @@ body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-sy
 {% if role == 'developer' %}<a href="/developer"><span>⚙</span> Developer Panel</a>{% endif %}
 <a href="/wallet"><span>🎁</span> Rewards</a>
 <a href="/account"><span>⚙</span> Account</a>
-<a href="/api/songs" target="_blank"><span>{ }</span> API Songs</a>
+<a href="/youtube?q={{query}}" ><span>▶</span> YouTube Full Mode</a>
 <a href="/logout"><span>⇥</span> Logout</a>
 </nav>
 </aside>
 
 <main class="main">
 <div class="topbar">
-<form class="search" action="/home"><input name="q" value="{{q or ''}}" placeholder="Search uploaded songs..."></form>
+<form class="search" action="/home"><input name="q" value="{{query}}" placeholder="Search Deezer preview songs..."></form>
 <div class="user-pill">Hi, {{user}} · {{role}}</div>
 </div>
 
 <section class="hero">
-<div class="hero-cover">{% if songs and songs[0].cover_url %}<img src="{{songs[0].cover_url}}">{% else %}<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:52px">🎧</div>{% endif %}</div>
+<div class="hero-cover">{% if songs and songs[0].cover %}<img src="{{songs[0].cover}}">{% else %}<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:52px">🎧</div>{% endif %}</div>
 <div>
-<div class="eyebrow">ASHPLEX Own Music API</div>
+<div class="eyebrow">ASHPLEX Hybrid Music</div>
 <h1>Your Mood.<br>Your Music.</h1>
-<p>Hybrid platform: owned songs play from ASHPLEX API, and YouTube provides unlimited full-song discovery.</p>
+<p>Deezer API gives fast preview and metadata. YouTube gives full-song discovery.</p>
 <a class="btn" href="/home">Play Mix</a>
-<a class="btn secondary" href="/developer">Upload Songs</a>
+<a class="btn secondary" href="/youtube?q={{query}}">YouTube Full Mode</a>
 </div>
 </section>
 
 <div class="mood-ai-box">
-<div class="mood-ai-head"><h3>🤖 AI Mood Level Recommendation</h3><div class="ai-badge">Own API recommendation</div></div>
+<div class="mood-ai-head"><h3>🤖 AI Mood Level Recommendation</h3><div class="ai-badge">Mood + Level → Deezer search</div></div>
 <form class="mood-ai-form" action="/home">
 <div>
 <label>Select Mood</label>
 <select name="mood">
-<option value="all">All</option><option value="happy">Happy</option><option value="sad">Sad</option><option value="romantic">Romantic</option><option value="focus">Focus</option><option value="relax">Relax</option><option value="workout">Workout</option><option value="angry">Angry</option>
+<option value="trending">Trending</option><option value="happy">Happy</option><option value="sad">Sad</option><option value="romantic">Romantic</option><option value="focus">Focus</option><option value="relax">Relax</option><option value="workout">Workout</option><option value="angry">Angry</option>
 </select>
 </div>
 <div>
 <label>Mood Level</label>
 <select name="level">
-<option value="all">All</option><option value="low">Low / Soft</option><option value="medium">Medium</option><option value="high">High / Intense</option>
+<option value="low">Low / Soft</option><option value="medium" selected>Medium</option><option value="high">High / Intense</option>
 </select>
 </div>
 <button class="btn" type="submit">Generate Mix</button>
@@ -315,54 +376,57 @@ body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-sy
 
 <div class="hybrid-box">
 <h3>🌐 Hybrid Full Song Source</h3>
-<p style="color:#aaa;margin:8px 0 12px">ASHPLEX API = your owned songs. YouTube = unlimited full songs when internal library is small.</p>
-<form class="search" action="/youtube" style="max-width:100%;margin:0">
-<input name="q" value="{{q or ''}}" placeholder="Search full song on YouTube...">
-</form>
-<a class="source-badge" href="/youtube?q={{q or 'arijit'}}">Open YouTube Full Song Mode</a>
+<p style="color:#aaa;margin:8px 0 12px">Preview on ASHPLEX via Deezer. Full song option opens YouTube search/player.</p>
+<a class="source-badge" href="/youtube?q={{query}}">Open YouTube Full Song Mode</a>
 </div>
 
-<div class="section-row"><h2>Made For You</h2><span>{{songs|length}} ASHPLEX API tracks</span></div>
+<div class="section-row"><h2>Made For You</h2><span>{{songs|length}} Deezer preview tracks · {{query}}</span></div>
 
 <div class="grid">
 {% for s in songs %}
-<div class="card" onclick="playSong('{{s.stream_url}}','{{s.title|e}}','{{s.artist|e}}','{{s.cover_url}}', {{s.id}})">
-<div class="card-cover">{% if s.cover_url %}<img src="{{s.cover_url}}">{% else %}<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:35px">🎵</div>{% endif %}<div class="play-badge">▶</div></div>
-<div><h3>{{s.title}}</h3><p>{{s.artist}} · {{s.mood}} · {{s.level}}</p><a class="yt-btn" href="{{s.youtube_url}}" target="_blank" onclick="event.stopPropagation()">▶ YouTube Full Song</a></div>
+<div class="card" onclick="playSong('{{s.preview}}','{{s.title|e}}','{{s.artist|e}}','{{s.cover}}')">
+<div class="card-cover">{% if s.cover %}<img src="{{s.cover}}">{% else %}<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:35px">🎵</div>{% endif %}<div class="play-badge">▶</div></div>
+<div><h3>{{s.title}}</h3><p>{{s.artist}}</p><a class="yt-btn" href="{{s.youtube_url}}" target="_blank" onclick="event.stopPropagation()">▶ YouTube Full Song</a></div>
 </div>
 {% else %}
-<p style="color:#aaa">No songs found. Developer should upload songs first.</p>
+<p style="color:#aaa">No songs found. Try another search.</p>
 {% endfor %}
 </div>
 </main>
 
 <footer class="player">
 <div class="now">
-<div class="now-cover" id="nowCover">{% if songs and songs[0].cover_url %}<img src="{{songs[0].cover_url}}">{% else %}🎧{% endif %}</div>
-<div style="min-width:0"><h3 id="nowTitle">{% if songs %}{{songs[0].title}}{% else %}No Song{% endif %}</h3><p id="nowArtist">{% if songs %}{{songs[0].artist}}{% else %}Upload music{% endif %}</p></div>
+<div class="now-cover" id="nowCover">{% if songs and songs[0].cover %}<img src="{{songs[0].cover}}">{% else %}🎧{% endif %}</div>
+<div style="min-width:0"><h3 id="nowTitle">{% if songs %}{{songs[0].title}}{% else %}No Song{% endif %}</h3><p id="nowArtist">{% if songs %}{{songs[0].artist}}{% else %}Search music{% endif %}</p></div>
 </div>
 <div class="controls"><button class="control">⏮</button><button class="control play" id="playBtn">▶</button><button class="control">⏭</button></div>
 <div class="volume">🔊 ━━━━━</div>
 </footer>
 </div>
 
-<audio id="audio" class="hidden-audio" {% if songs %}src="{{songs[0].stream_url}}"{% endif %}></audio>
+<audio id="audio" class="hidden-audio" {% if songs %}src="{{songs[0].preview}}"{% endif %}></audio>
 <script>
 const audio=document.getElementById("audio");const playBtn=document.getElementById("playBtn");
-function playSong(src,title,artist,cover,id){audio.src=src;document.getElementById("nowTitle").innerText=title;document.getElementById("nowArtist").innerText=artist;document.getElementById("nowCover").innerHTML=cover?'<img src="'+cover+'">':'🎵';audio.play();playBtn.innerText="⏸";fetch("/api/play/"+id)
-  .then(r=>r.json())
-  .then(d=>{
+function playSong(src,title,artist,cover){
+  if(!src){alert("Preview not available. Use YouTube Full Song button.");return;}
+  audio.src=src;
+  document.getElementById("nowTitle").innerText=title;
+  document.getElementById("nowArtist").innerText=artist;
+  document.getElementById("nowCover").innerHTML=cover?'<img src="'+cover+'">':'🎵';
+  audio.play();
+  playBtn.innerText="⏸";
+  fetch("/api/play").then(r=>r.json()).then(d=>{
     if(d.reward_added && d.reward_added > 0){
       alert("🎉 Congratulations! You earned ₹" + d.reward_added + " reward for completing daily target.");
     }
-  });}
-playBtn.addEventListener("click",()=>{if(audio.paused){audio.play();playBtn.innerText="⏸"}else{audio.pause();playBtn.innerText="▶"}});
+  });
+}
+playBtn.addEventListener("click",()=>{if(audio.paused){audio.play();playBtn.innerText="⏸";fetch("/api/play");}else{audio.pause();playBtn.innerText="▶"}});
 audio.addEventListener("ended",()=>{playBtn.innerText="▶"});
 </script>
 </body>
 </html>
 """
-
 
 YOUTUBE_HTML = """
 <!DOCTYPE html>
@@ -373,38 +437,22 @@ YOUTUBE_HTML = """
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:linear-gradient(180deg,#181820,#08080b 45%,#000);color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-.page{min-height:100vh;padding:28px}
-.header{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:24px}
-.logo h1{margin:0;font-size:34px}.logo p{color:#aaa;margin-top:6px}
-.search{display:flex;gap:10px;max-width:620px;width:100%}
-.search input{flex:1;padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:white}
-.btn{padding:13px 20px;border:0;border-radius:999px;background:#fa233b;color:white;text-decoration:none;font-weight:800;cursor:pointer}
-.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);border-radius:28px;padding:20px}
-iframe{width:100%;height:520px;border:0;border-radius:22px;background:#000}
-.note{color:#aaa;margin:14px 0;line-height:1.5}
+.page{min-height:100vh;padding:28px}.header{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:24px}.logo h1{margin:0;font-size:34px}.logo p{color:#aaa;margin-top:6px}.search{display:flex;gap:10px;max-width:620px;width:100%}.search input{flex:1;padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:white}.btn{padding:13px 20px;border:0;border-radius:999px;background:#fa233b;color:white;text-decoration:none;font-weight:800;cursor:pointer}.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);border-radius:28px;padding:20px}iframe{width:100%;height:520px;border:0;border-radius:22px;background:#000}.note{color:#aaa;margin:14px 0;line-height:1.5}
 @media(max-width:800px){.header{display:block}.search{margin-top:16px}iframe{height:280px}.page{padding:16px}}
 </style>
 </head>
 <body>
 <div class="page">
 <div class="header">
-<div class="logo">
-<h1>🎧 ASHPLEX Full Song Mode</h1>
-<p>YouTube embedded playback for unlimited full songs</p>
-</div>
+<div class="logo"><h1>🎧 ASHPLEX Full Song Mode</h1><p>YouTube embedded playback for unlimited full songs</p></div>
 <a class="btn" href="/home">Back to ASHPLEX</a>
 </div>
-
 <form class="search" action="/youtube">
 <input name="q" value="{{q}}" placeholder="Search full song...">
 <button class="btn">Search</button>
 </form>
-
 <p class="note">ASHPLEX controls mood recommendation and user experience. YouTube is used as scalable full-song content source.</p>
-
-<div class="card">
-<iframe src="{{embed_url}}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
+<div class="card"><iframe src="{{embed_url}}" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
 </div>
 </body>
 </html>
@@ -420,67 +468,23 @@ DEVELOPER_HTML = """
 *{box-sizing:border-box}
 body{margin:0;background:radial-gradient(circle at top right,rgba(250,35,59,.22),transparent 35%),#08080b;color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
 .page{min-height:100vh;padding:28px}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}.btn{background:#fa233b;color:white;text-decoration:none;padding:12px 18px;border-radius:999px;font-weight:700;border:0;cursor:pointer}.btn.secondary{background:rgba(255,255,255,.12)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.panel{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);border-radius:24px;padding:22px}.panel h2{margin-top:0}
-input,select{width:100%;padding:13px;margin:8px 0 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:white}
-label{color:#aaa;font-size:13px}table{width:100%;border-collapse:collapse;margin-top:12px}td,th{padding:12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}th{color:#aaa}
-@media(max-width:850px){.header{display:block}.grid{grid-template-columns:1fr}}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:22px;margin-bottom:22px}.panel{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);border-radius:24px;padding:22px}.panel h2{margin-top:0}.big{font-size:42px;color:#ff8a98;font-weight:800}table{width:100%;border-collapse:collapse;margin-top:12px}td,th{padding:12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}th{color:#aaa}
+@media(max-width:850px){.header{display:block}}
 </style>
 </head>
 <body>
 <div class="page">
 <div class="header">
-<div><h1>🎧 ASHPLEX Developer Panel</h1><p style="color:#aaa">Upload songs, view customer activity, and monitor reward targets.</p></div>
+<div><h1>🎧 ASHPLEX Developer Panel</h1><p style="color:#aaa">Deezer + YouTube hybrid platform with customer analytics.</p></div>
 <div><a class="btn secondary" href="/home">Open App</a> <a class="btn secondary" href="/logout">Logout</a></div>
 </div>
 
-<div class="grid" style="margin-bottom:22px">
-<div class="panel"><h2>Total Customers</h2><h1 style="font-size:42px;color:#ff8a98">{{customer_count}}</h1><p style="color:#aaa">Registered customer accounts</p></div>
-<div class="panel"><h2>Total Plays</h2><h1 style="font-size:42px;color:#ff8a98">{{total_plays}}</h1><p style="color:#aaa">All customer listening activity</p></div>
-</div>
-
 <div class="grid">
-<div class="panel">
-<h2>Upload Song</h2>
-<form method="POST" action="/developer/upload" enctype="multipart/form-data">
-<label>Song Title</label>
-<input name="title" required>
-<label>Artist</label>
-<input name="artist" required>
-<label>Mood</label>
-<select name="mood"><option value="happy">Happy</option><option value="sad">Sad</option><option value="romantic">Romantic</option><option value="focus">Focus</option><option value="relax">Relax</option><option value="workout">Workout</option><option value="angry">Angry</option></select>
-<label>Level</label>
-<select name="level"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select>
-<label>Audio File</label>
-<input type="file" name="audio" accept="audio/*" required>
-<label>Cover Image optional</label>
-<input type="file" name="cover" accept="image/*">
-<button class="btn">Upload to ASHPLEX API</button>
-</form>
+<div class="panel"><h2>Total Customers</h2><div class="big">{{customer_count}}</div><p style="color:#aaa">Registered customer accounts</p></div>
+<div class="panel"><h2>Total Plays</h2><div class="big">{{total_plays}}</div><p style="color:#aaa">Customer preview play activity</p></div>
+<div class="panel"><h2>Music Sources</h2><div class="big">2</div><p style="color:#aaa">Deezer preview + YouTube full song</p></div>
 </div>
 
-<div class="panel">
-<h2>API Endpoints</h2>
-<p><b>GET</b> /api/songs</p>
-<p><b>GET</b> /api/search?q=song</p>
-<p><b>GET</b> /api/recommend?mood=happy&level=high</p>
-<p><b>GET</b> /api/stream/&lt;song_id&gt;</p>
-<br>
-<p style="color:#aaa">This makes ASHPLEX your own music API platform.</p>
-</div>
-</div>
-
-<br>
-<div class="panel">
-<h2>Uploaded Songs</h2>
-<table>
-<tr><th>ID</th><th>Title</th><th>Artist</th><th>Mood</th><th>Level</th><th>Plays</th><th>Action</th></tr>
-{% for s in songs %}
-<tr><td>{{s.id}}</td><td>{{s.title}}</td><td>{{s.artist}}</td><td>{{s.mood}}</td><td>{{s.level}}</td><td>{{s.play_count}}</td><td><a style="color:#ff8a98" href="/developer/delete/{{s.id}}">Delete</a></td></tr>
-{% endfor %}
-</table>
-</div>
-
-<br>
 <div class="panel">
 <h2>Customer Listening Activity & Reward Status</h2>
 <p style="color:#aaa">Rule: If customer listens 20 songs in one day, reward target is achieved.</p>
@@ -504,6 +508,13 @@ label{color:#aaa;font-size:13px}table{width:100%;border-collapse:collapse;margin
 </html>
 """
 
+ACCOUNT_HTML = """
+<!DOCTYPE html>
+<html>
+<head><title>ASHPLEX Account</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>
+body{margin:0;min-height:100vh;background:#08080b;color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;display:flex;align-items:center;justify-content:center}.card{width:440px;background:rgba(255,255,255,.08);border-radius:24px;padding:28px}.btn{display:inline-block;margin-top:18px;padding:12px 18px;border-radius:999px;background:#fa233b;color:white;text-decoration:none;border:0;font-weight:700;cursor:pointer}.secondary{background:rgba(255,255,255,.12)}.danger{background:#b00020}.row{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between}</style></head>
+<body><div class="card"><h1>🎧 ASHPLEX Account</h1><p style="color:#aaa">Your account is saved in database for future login.</p><div class="row"><span>Username</span><b>{{user}}</b></div><div class="row"><span>Role</span><b>{{role}}</b></div><a class="btn secondary" href="/home">Back</a> <a class="btn secondary" href="/logout">Logout</a>{% if role != 'developer' %}<form method="POST" action="/forget-account" onsubmit="return confirm('Delete account permanently?')"><button class="btn danger">Forget / Delete My Account</button></form>{% endif %}</div></body></html>
+"""
 
 WALLET_HTML = """
 <!DOCTYPE html>
@@ -520,7 +531,7 @@ h1{margin:0 0 10px}.big{font-size:48px;color:#ff8a98;font-weight:800}.muted{colo
 <body>
 <div class="card">
 <h1>🎁 ASHPLEX Reward Wallet</h1>
-<p class="muted">Daily target: Listen 20 songs to unlock ₹10 reward.</p>
+<p class="muted">Daily target: Listen 20 preview songs to unlock ₹10 reward.</p>
 <div class="big">₹{{total_rewards}}</div>
 <p>Total reward earned</p>
 <div class="bar"><div class="fill"></div></div>
@@ -529,14 +540,6 @@ h1{margin:0 0 10px}.big{font-size:48px;color:#ff8a98;font-weight:800}.muted{colo
 </div>
 </body>
 </html>
-"""
-
-ACCOUNT_HTML = """
-<!DOCTYPE html>
-<html>
-<head><title>ASHPLEX Account</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>
-body{margin:0;min-height:100vh;background:#08080b;color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;display:flex;align-items:center;justify-content:center}.card{width:440px;background:rgba(255,255,255,.08);border-radius:24px;padding:28px}.btn{display:inline-block;margin-top:18px;padding:12px 18px;border-radius:999px;background:#fa233b;color:white;text-decoration:none;border:0;font-weight:700;cursor:pointer}.secondary{background:rgba(255,255,255,.12)}.danger{background:#b00020}.row{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between}</style></head>
-<body><div class="card"><h1>🎧 ASHPLEX Account</h1><p style="color:#aaa">Your account is saved in database for future login.</p><div class="row"><span>Username</span><b>{{user}}</b></div><div class="row"><span>Role</span><b>{{role}}</b></div><a class="btn secondary" href="/home">Back</a> <a class="btn secondary" href="/logout">Logout</a>{% if role != 'developer' %}<form method="POST" action="/forget-account" onsubmit="return confirm('Delete account permanently?')"><button class="btn danger">Forget / Delete My Account</button></form>{% endif %}</div></body></html>
 """
 
 @app.route("/")
@@ -587,30 +590,22 @@ def register():
 @app.route("/home")
 @login_required
 def home():
-    q = request.args.get("q", "").strip()
-    mood = request.args.get("mood", "all")
-    level = request.args.get("level", "all")
+    mood = request.args.get("mood", "trending")
+    level = request.args.get("level", "medium")
+    query = request.args.get("q")
 
-    con = db()
-    cur = con.cursor()
+    if not query:
+        query = ai_mood_query(mood, level)
 
-    if q:
-        cur.execute("SELECT * FROM songs WHERE title LIKE ? OR artist LIKE ? ORDER BY id DESC", (f"%{q}%", f"%{q}%"))
-    else:
-        where, params = ai_query_filter(mood, level)
-        sql = "SELECT * FROM songs"
-        if where:
-            sql += " WHERE " + " AND ".join(where)
-        sql += " ORDER BY play_count DESC, id DESC"
-        cur.execute(sql, params)
+    songs = get_deezer_songs(query)
 
-    rows = cur.fetchall()
-    con.close()
-
-    songs = [song_to_dict(r) for r in rows]
-
-    return render_template_string(APP_HTML, songs=songs, user=session.get("user"), role=session.get("role"), q=q)
-
+    return render_template_string(
+        APP_HTML,
+        songs=songs,
+        query=query,
+        user=session.get("user"),
+        role=session.get("role")
+    )
 
 @app.route("/youtube")
 @login_required
@@ -627,9 +622,6 @@ def youtube_mode():
 def developer():
     con = db()
     cur = con.cursor()
-
-    cur.execute("SELECT * FROM songs ORDER BY id DESC")
-    songs = cur.fetchall()
 
     cur.execute("SELECT COUNT(*) AS c FROM users WHERE role='customer'")
     customer_count = cur.fetchone()["c"]
@@ -648,222 +640,10 @@ def developer():
 
     return render_template_string(
         DEVELOPER_HTML,
-        songs=songs,
         stats=stats,
         customer_count=customer_count,
         total_plays=total_plays
     )
-
-@app.route("/developer/upload", methods=["POST"])
-@developer_required
-def developer_upload():
-    title = request.form.get("title", "").strip()
-    artist = request.form.get("artist", "").strip()
-    mood = request.form.get("mood", "happy")
-    level = request.form.get("level", "medium")
-    audio = request.files.get("audio")
-    cover = request.files.get("cover")
-
-    if not audio or not audio.filename or not allowed(audio.filename, ALLOWED_AUDIO):
-        return "Invalid audio file"
-
-    stamp = str(int(time.time()))
-    audio_name = stamp + "_" + safe_name(audio.filename)
-    audio.save(os.path.join(MUSIC_DIR, audio_name))
-
-    cover_name = ""
-    if cover and cover.filename and allowed(cover.filename, ALLOWED_IMAGE):
-        cover_name = stamp + "_" + safe_name(cover.filename)
-        cover.save(os.path.join(COVER_DIR, cover_name))
-
-    con = db()
-    cur = con.cursor()
-    cur.execute("""
-    INSERT INTO songs(title, artist, mood, level, filename, cover)
-    VALUES(?,?,?,?,?,?)
-    """, (title, artist, mood, level, audio_name, cover_name))
-    con.commit()
-    con.close()
-
-    return redirect("/developer")
-
-@app.route("/developer/delete/<int:song_id>")
-@developer_required
-def developer_delete(song_id):
-    con = db()
-    cur = con.cursor()
-    cur.execute("SELECT * FROM songs WHERE id=?", (song_id,))
-    song = cur.fetchone()
-
-    if song:
-        audio_path = os.path.join(MUSIC_DIR, song["filename"])
-        if os.path.exists(audio_path):
-            os.remove(audio_path)
-
-        if song["cover"]:
-            cover_path = os.path.join(COVER_DIR, song["cover"])
-            if os.path.exists(cover_path):
-                os.remove(cover_path)
-
-    cur.execute("DELETE FROM songs WHERE id=?", (song_id,))
-    cur.execute("DELETE FROM history WHERE song_id=?", (song_id,))
-    cur.execute("DELETE FROM likes WHERE song_id=?", (song_id,))
-    con.commit()
-    con.close()
-    return redirect("/developer")
-
-@app.route("/account")
-@login_required
-def account():
-    return render_template_string(ACCOUNT_HTML, user=session.get("user"), role=session.get("role"))
-
-@app.route("/forget-account", methods=["POST"])
-@login_required
-def forget_account():
-    if session.get("role") == "developer":
-        return redirect("/account")
-
-    username = session.get("user")
-    con = db()
-    cur = con.cursor()
-    cur.execute("DELETE FROM users WHERE username=? AND role='customer'", (username,))
-    con.commit()
-    con.close()
-    session.clear()
-    return redirect("/")
-
-@app.route("/api/songs")
-def api_songs():
-    con = db()
-    cur = con.cursor()
-    cur.execute("SELECT * FROM songs ORDER BY id DESC")
-    rows = cur.fetchall()
-    con.close()
-    return jsonify({"songs": [song_to_dict(r) for r in rows]})
-
-@app.route("/api/search")
-def api_search():
-    q = request.args.get("q", "").strip()
-    con = db()
-    cur = con.cursor()
-    cur.execute("SELECT * FROM songs WHERE title LIKE ? OR artist LIKE ? ORDER BY id DESC", (f"%{q}%", f"%{q}%"))
-    rows = cur.fetchall()
-    con.close()
-    return jsonify({"query": q, "songs": [song_to_dict(r) for r in rows]})
-
-@app.route("/api/recommend")
-def api_recommend():
-    mood = request.args.get("mood", "all")
-    level = request.args.get("level", "all")
-    where, params = ai_query_filter(mood, level)
-
-    sql = "SELECT * FROM songs"
-    if where:
-        sql += " WHERE " + " AND ".join(where)
-    sql += " ORDER BY play_count DESC, id DESC"
-
-    con = db()
-    cur = con.cursor()
-    cur.execute(sql, params)
-    rows = cur.fetchall()
-    con.close()
-
-    return jsonify({"mood": mood, "level": level, "songs": [song_to_dict(r) for r in rows]})
-
-@app.route("/api/stream/<int:song_id>")
-def api_stream(song_id):
-    con = db()
-    cur = con.cursor()
-    cur.execute("SELECT * FROM songs WHERE id=?", (song_id,))
-    song = cur.fetchone()
-    con.close()
-
-    if not song:
-        return "Song not found", 404
-
-    path = os.path.join(MUSIC_DIR, song["filename"])
-    if not os.path.exists(path):
-        return "File missing", 404
-
-    return send_file(path, conditional=True)
-
-@app.route("/api/play/<int:song_id>")
-@login_required
-def api_play(song_id):
-    username = session.get("user")
-    today = str(date.today())
-
-    con = db()
-    cur = con.cursor()
-
-    cur.execute("UPDATE songs SET play_count = play_count + 1 WHERE id=?", (song_id,))
-    cur.execute("INSERT INTO history(username, song_id) VALUES(?,?)", (username, song_id))
-
-    cur.execute("SELECT * FROM user_stats WHERE username=?", (username,))
-    stat = cur.fetchone()
-
-    reward_added = 0
-
-    if not stat:
-        cur.execute("""
-            INSERT INTO user_stats(username, total_plays, today_plays, total_rewards, last_reward_date, last_play_date)
-            VALUES(?,?,?,?,?,?)
-        """, (username, 1, 1, 0, "", today))
-        today_plays = 1
-        total_rewards = 0
-    else:
-        if stat["last_play_date"] == today:
-            today_plays = stat["today_plays"] + 1
-        else:
-            today_plays = 1
-
-        total_rewards = stat["total_rewards"]
-
-        # Reward rule: once per day, after 20 plays, add ₹10
-        if today_plays >= 20 and stat["last_reward_date"] != today:
-            reward_added = 10
-            total_rewards += 10
-            cur.execute("""
-                UPDATE user_stats
-                SET total_plays = total_plays + 1,
-                    today_plays = ?,
-                    total_rewards = ?,
-                    last_reward_date = ?,
-                    last_play_date = ?
-                WHERE username=?
-            """, (today_plays, total_rewards, today, today, username))
-        else:
-            cur.execute("""
-                UPDATE user_stats
-                SET total_plays = total_plays + 1,
-                    today_plays = ?,
-                    total_rewards = ?,
-                    last_play_date = ?
-                WHERE username=?
-            """, (today_plays, total_rewards, today, username))
-
-    con.commit()
-    con.close()
-
-    return jsonify({
-        "ok": True,
-        "today_plays": today_plays,
-        "reward_added": reward_added,
-        "total_rewards": total_rewards,
-        "target": 20,
-        "target_achieved": today_plays >= 20
-    })
-
-
-@app.route("/api/youtube")
-def api_youtube():
-    q = request.args.get("q", "arijit")
-    return jsonify({
-        "query": q,
-        "youtube_search_url": youtube_search_url(query=q),
-        "youtube_embed_url": youtube_embed_url(q)
-    })
-
 
 @app.route("/wallet")
 @login_required
@@ -885,6 +665,47 @@ def wallet():
         total_rewards=total_rewards,
         progress=progress
     )
+
+@app.route("/account")
+@login_required
+def account():
+    return render_template_string(ACCOUNT_HTML, user=session.get("user"), role=session.get("role"))
+
+@app.route("/forget-account", methods=["POST"])
+@login_required
+def forget_account():
+    if session.get("role") == "developer":
+        return redirect("/account")
+
+    username = session.get("user")
+    con = db()
+    cur = con.cursor()
+    cur.execute("DELETE FROM users WHERE username=? AND role='customer'", (username,))
+    cur.execute("DELETE FROM user_stats WHERE username=?", (username,))
+    con.commit()
+    con.close()
+    session.clear()
+    return redirect("/")
+
+@app.route("/api/play")
+@login_required
+def api_play():
+    result = update_user_activity(session.get("user"))
+    return jsonify({"ok": True, **result})
+
+@app.route("/api/deezer")
+def api_deezer():
+    q = request.args.get("q", "arijit")
+    return jsonify({"query": q, "songs": get_deezer_songs(q)})
+
+@app.route("/api/youtube")
+def api_youtube():
+    q = request.args.get("q", "arijit")
+    return jsonify({
+        "query": q,
+        "youtube_search_url": youtube_search_url(query=q),
+        "youtube_embed_url": youtube_embed_url(q)
+    })
 
 @app.route("/api/user-stats")
 @login_required
@@ -914,4 +735,3 @@ def logout():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
-    
