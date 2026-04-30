@@ -578,6 +578,458 @@ body{overflow:auto;background:radial-gradient(circle at top,#302a33,#08080b 55%,
     padding-bottom:170px !important;
   }
 }
+
+/* -------- ASHPLEX PHONE UI UPGRADE -------- */
+.mobile-title-bar{display:none}
+.mobile-chip-row{display:none}
+
+@media(max-width:850px){
+  body{
+    overflow:auto;
+    background:#000;
+  }
+
+  .app{
+    display:block;
+    min-height:100vh;
+    height:auto;
+    padding-bottom:165px!important;
+    background:
+      radial-gradient(circle at top,#33243a 0%,#111118 42%,#000 100%);
+  }
+
+  .sidebar{
+    display:none;
+  }
+
+  .main{
+    padding:14px 14px 145px!important;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 20% 0%,rgba(250,35,59,.25),transparent 34%),
+      linear-gradient(180deg,#19191f,#07070a 60%,#000);
+  }
+
+  .mobile-title-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin:4px 0 16px;
+  }
+
+  .mobile-title-bar .mobile-logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:900;
+    font-size:22px;
+  }
+
+  .mobile-title-bar .mobile-avatar{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#fa233b,#ff8a98);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:900;
+    box-shadow:0 12px 30px rgba(250,35,59,.35);
+  }
+
+  .topbar{
+    display:block!important;
+    margin-bottom:16px!important;
+  }
+
+  .search{
+    max-width:none!important;
+    width:100%;
+    margin-bottom:10px;
+  }
+
+  .search input{
+    width:100%;
+    border-radius:999px!important;
+    padding:15px 18px!important;
+    background:rgba(255,255,255,.10)!important;
+    border:1px solid rgba(255,255,255,.12)!important;
+    backdrop-filter:blur(20px);
+  }
+
+  .user-pill{
+    display:none!important;
+  }
+
+  .mobile-chip-row{
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    padding-bottom:6px;
+    margin:0 0 14px;
+    scrollbar-width:none;
+  }
+  .mobile-chip-row::-webkit-scrollbar{display:none}
+  .mobile-chip-row a{
+    flex:0 0 auto;
+    text-decoration:none;
+    color:white;
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:999px;
+    padding:9px 14px;
+    font-size:13px;
+    font-weight:700;
+  }
+  .mobile-chip-row a.active{
+    background:#fa233b;
+    box-shadow:0 10px 24px rgba(250,35,59,.28);
+  }
+
+  .hero{
+    display:block!important;
+    min-height:auto!important;
+    padding:18px!important;
+    border-radius:32px!important;
+    margin-bottom:18px!important;
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.055)),
+      radial-gradient(circle at top right,rgba(250,35,59,.32),transparent 42%)!important;
+    box-shadow:0 22px 70px rgba(0,0,0,.45)!important;
+  }
+
+  .hero-cover{
+    width:100%!important;
+    height:auto!important;
+    aspect-ratio:1/1!important;
+    max-width:315px!important;
+    margin:0 auto 18px!important;
+    border-radius:30px!important;
+  }
+
+  .hero h1{
+    font-size:36px!important;
+    line-height:1.03!important;
+    letter-spacing:-1px!important;
+  }
+
+  .hero p{
+    font-size:14px!important;
+    line-height:1.5!important;
+  }
+
+  .hero .btn{
+    padding:11px 16px!important;
+    font-size:13px;
+    margin-top:4px;
+  }
+
+  .mood-ai-box,.hybrid-box{
+    border-radius:28px!important;
+    padding:16px!important;
+    margin-bottom:16px!important;
+  }
+
+  .mood-ai-head{
+    display:block!important;
+  }
+
+  .ai-badge{
+    display:inline-block;
+    margin-top:8px;
+  }
+
+  .mood-ai-form{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+  }
+
+  .section-row{
+    margin-top:18px!important;
+  }
+
+  .section-row h2{
+    font-size:24px!important;
+  }
+
+  .section-row span{
+    display:none;
+  }
+
+  .grid{
+    grid-template-columns:1fr!important;
+    gap:12px!important;
+  }
+
+  .card{
+    display:grid!important;
+    grid-template-columns:82px 1fr!important;
+    gap:13px!important;
+    align-items:center!important;
+    border-radius:24px!important;
+    padding:12px!important;
+    background:rgba(255,255,255,.08)!important;
+    border:1px solid rgba(255,255,255,.10)!important;
+    box-shadow:none!important;
+  }
+
+  .card:hover{
+    transform:none!important;
+  }
+
+  .card-cover{
+    margin:0!important;
+    border-radius:18px!important;
+  }
+
+  .card h3{
+    font-size:15px!important;
+    margin-bottom:4px!important;
+  }
+
+  .card p{
+    font-size:12px!important;
+  }
+
+  .play-badge{
+    opacity:1!important;
+    width:32px!important;
+    height:32px!important;
+    right:7px!important;
+    bottom:7px!important;
+  }
+
+  .yt-btn{
+    font-size:11px!important;
+    padding:7px 10px!important;
+    margin-top:8px!important;
+  }
+
+  .player{
+    position:fixed!important;
+    left:10px!important;
+    right:10px!important;
+    bottom:86px!important;
+    height:74px!important;
+    grid-template-columns:1fr auto!important;
+    border-radius:24px!important;
+    padding:10px 14px!important;
+    background:rgba(18,18,23,.92)!important;
+    backdrop-filter:blur(24px)!important;
+    box-shadow:0 20px 60px rgba(0,0,0,.55)!important;
+    z-index:88!important;
+  }
+
+  .now-cover{
+    width:52px!important;
+    height:52px!important;
+    border-radius:16px!important;
+  }
+
+  .controls{
+    justify-content:flex-end!important;
+  }
+
+  .controls .control:not(.play), .volume{
+    display:none!important;
+  }
+
+  .play{
+    width:46px!important;
+    height:46px!important;
+  }
+
+  .mobile-bottom-nav,.bottom-nav{
+    height:76px!important;
+    background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.98))!important;
+    backdrop-filter:blur(22px)!important;
+  }
+}
+
+/* ---------- ASHPLEX ADAPTIVE UI: MAC vs PHONE ---------- */
+
+/* Desktop / Mac UI */
+@media(min-width:851px){
+  body{
+    overflow:hidden;
+  }
+
+  .app{
+    display:grid!important;
+    grid-template-columns:260px 1fr!important;
+    grid-template-rows:1fr 92px!important;
+    height:100vh!important;
+    width:100vw!important;
+  }
+
+  .sidebar{
+    display:block!important;
+  }
+
+  .main{
+    padding:28px 38px 120px!important;
+  }
+
+  .mobile-title-bar,
+  .mobile-chip-row,
+  .mobile-bottom-nav,
+  .bottom-nav{
+    display:none!important;
+  }
+
+  .topbar{
+    display:flex!important;
+  }
+
+  .hero{
+    display:grid!important;
+    grid-template-columns:260px 1fr!important;
+    gap:34px!important;
+    align-items:end!important;
+    min-height:310px!important;
+    padding:30px!important;
+    border-radius:36px!important;
+  }
+
+  .hero-cover{
+    width:260px!important;
+    height:260px!important;
+    border-radius:32px!important;
+    margin:0!important;
+  }
+
+  .hero h1{
+    font-size:68px!important;
+    line-height:.95!important;
+  }
+
+  .grid{
+    display:grid!important;
+    grid-template-columns:repeat(auto-fill,minmax(170px,1fr))!important;
+    gap:20px!important;
+  }
+
+  .card{
+    display:block!important;
+    border-radius:24px!important;
+    padding:14px!important;
+  }
+
+  .card-cover{
+    width:100%!important;
+    aspect-ratio:1/1!important;
+    margin-bottom:12px!important;
+  }
+
+  .player{
+    position:static!important;
+    grid-column:1/3!important;
+    height:92px!important;
+    border-radius:0!important;
+    display:grid!important;
+    grid-template-columns:320px 1fr 260px!important;
+    left:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+  }
+}
+
+/* Phone UI */
+@media(max-width:850px){
+  body{
+    overflow:auto!important;
+    background:#000!important;
+  }
+
+  .app{
+    display:block!important;
+    min-height:100vh!important;
+    height:auto!important;
+    padding-bottom:170px!important;
+  }
+
+  .sidebar{
+    display:none!important;
+  }
+
+  .mobile-title-bar,
+  .mobile-chip-row{
+    display:flex!important;
+  }
+
+  .topbar{
+    display:block!important;
+  }
+
+  .main{
+    padding:14px 14px 145px!important;
+    min-height:100vh!important;
+    background:
+      radial-gradient(circle at 18% 0%,rgba(250,35,59,.24),transparent 35%),
+      linear-gradient(180deg,#17171f,#07070a 60%,#000)!important;
+  }
+
+  .hero{
+    display:block!important;
+    min-height:auto!important;
+    padding:18px!important;
+    border-radius:32px!important;
+  }
+
+  .hero-cover{
+    width:100%!important;
+    height:auto!important;
+    aspect-ratio:1/1!important;
+    max-width:315px!important;
+    margin:0 auto 18px!important;
+  }
+
+  .hero h1{
+    font-size:36px!important;
+    line-height:1.03!important;
+  }
+
+  .grid{
+    grid-template-columns:1fr!important;
+    gap:12px!important;
+  }
+
+  .card{
+    display:grid!important;
+    grid-template-columns:82px 1fr!important;
+    gap:13px!important;
+    align-items:center!important;
+    border-radius:24px!important;
+    padding:12px!important;
+  }
+
+  .card-cover{
+    margin:0!important;
+    border-radius:18px!important;
+  }
+
+  .player{
+    position:fixed!important;
+    left:10px!important;
+    right:10px!important;
+    bottom:86px!important;
+    height:74px!important;
+    grid-template-columns:1fr auto!important;
+    border-radius:24px!important;
+    padding:10px 14px!important;
+    z-index:88!important;
+  }
+
+  .controls .control:not(.play),
+  .volume{
+    display:none!important;
+  }
+
+  .mobile-bottom-nav{
+    display:grid!important;
+  }
+}
 </style>
 </head>
 <body>
@@ -596,6 +1048,19 @@ body{overflow:auto;background:radial-gradient(circle at top,#302a33,#08080b 55%,
 </aside>
 
 <main class="main">
+<div class="mobile-title-bar">
+  <div class="mobile-logo"><span>🎧</span><span>ASHPLEX</span></div>
+  <div class="mobile-avatar">A</div>
+</div>
+
+<div class="mobile-chip-row">
+  <a class="active" href="/home?q=Kumar Sanu 90s hindi songs">Kumar Sanu</a>
+  <a href="/home?q=Udit Narayan 90s hindi songs">Udit</a>
+  <a href="/home?q=Alka Yagnik 90s hindi songs">Alka</a>
+  <a href="/home?q=Sonu Nigam 90s hindi songs">Sonu</a>
+  <a href="/library">Library</a>
+</div>
+
 <div class="topbar">
 <form class="search" action="/home"><input name="q" value="{{query}}" placeholder="Search 90s singers only..."></form>
 <div class="user-pill">Hi, {{user}} · {{role}}</div>
@@ -1006,6 +1471,151 @@ body{
     filter:drop-shadow(0 0 10px rgba(250,35,59,.65));
   }
   .page{padding-bottom:100px!important}
+}
+
+/* YouTube player mobile app layout */
+@media(max-width:850px){
+  body{
+    background:radial-gradient(circle at top,#33243a,#08080b 58%,#000)!important;
+  }
+  .page{
+    padding:14px 14px 100px!important;
+  }
+  .header{
+    display:block!important;
+    margin-bottom:16px!important;
+  }
+  .logo h1{
+    font-size:26px!important;
+  }
+  .search{
+    width:100%!important;
+    margin-top:14px!important;
+  }
+  .player-card,.music-card,.phone-player-shell{
+    border-radius:34px!important;
+    max-width:430px!important;
+    margin:0 auto!important;
+  }
+  .player-layout,.music-player-wrap{
+    display:block!important;
+    padding:18px!important;
+  }
+  .video-box,.album-window,.album-frame{
+    width:100%!important;
+    height:auto!important;
+    aspect-ratio:1/1!important;
+    border-radius:30px!important;
+    margin-bottom:20px!important;
+  }
+  .title,.track-title,.player-info h2{
+    font-size:24px!important;
+    line-height:1.18!important;
+  }
+  .controls,.player-buttons{
+    gap:20px!important;
+  }
+  .pause,.main-pause{
+    width:66px!important;
+    height:66px!important;
+  }
+}
+
+/* ---------- ASHPLEX PLAYER ADAPTIVE UI ---------- */
+@media(min-width:851px){
+  .page{
+    padding:28px!important;
+  }
+
+  .header{
+    max-width:1180px!important;
+    display:flex!important;
+  }
+
+  .player-card,
+  .music-card,
+  .phone-player-shell{
+    max-width:1180px!important;
+    margin:0 auto!important;
+  }
+
+  .player-layout,
+  .music-player-wrap{
+    display:grid!important;
+    grid-template-columns:330px 1fr!important;
+    gap:34px!important;
+    align-items:center!important;
+    padding:34px!important;
+  }
+
+  .video-box,
+  .album-window,
+  .album-frame{
+    width:330px!important;
+    height:330px!important;
+    border-radius:34px!important;
+  }
+
+  .title,
+  .track-title,
+  .player-info h2{
+    font-size:40px!important;
+  }
+
+  .bottom-nav{
+    display:none!important;
+  }
+}
+
+@media(max-width:850px){
+  .page{
+    padding:14px 14px 100px!important;
+  }
+
+  .header{
+    display:block!important;
+    margin-bottom:16px!important;
+  }
+
+  .search{
+    width:100%!important;
+    margin-top:14px!important;
+  }
+
+  .player-card,
+  .music-card,
+  .phone-player-shell{
+    max-width:430px!important;
+    margin:0 auto!important;
+    border-radius:34px!important;
+  }
+
+  .player-layout,
+  .music-player-wrap{
+    display:block!important;
+    padding:18px!important;
+  }
+
+  .video-box,
+  .album-window,
+  .album-frame{
+    width:100%!important;
+    height:auto!important;
+    aspect-ratio:1/1!important;
+    border-radius:30px!important;
+    margin-bottom:20px!important;
+  }
+
+  .title,
+  .track-title,
+  .player-info h2{
+    font-size:24px!important;
+    line-height:1.18!important;
+  }
+
+  .bottom-nav{
+    display:grid!important;
+  }
 }
 </style>
 </head>
