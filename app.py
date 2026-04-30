@@ -553,102 +553,333 @@ YOUTUBE_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-<title>ASHPLEX YouTube Full Song</title>
+<title>ASHPLEX Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:linear-gradient(180deg,#181820,#08080b 45%,#000);color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-.page{min-height:100vh;padding:28px}.header{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:24px}.logo h1{margin:0;font-size:34px}.logo p{color:#aaa;margin-top:6px}.search{display:flex;gap:10px;max-width:620px;width:100%}.search input{flex:1;padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:white}.btn{padding:13px 20px;border:0;border-radius:999px;background:#fa233b;color:white;text-decoration:none;font-weight:800;cursor:pointer}.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);border-radius:28px;padding:20px}.music-card{position:relative;overflow:hidden;border-radius:34px;background:linear-gradient(135deg,rgba(255,255,255,.13),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.12);box-shadow:0 35px 110px rgba(0,0,0,.55)}
-.music-card::before{content:"";position:absolute;inset:-40%;background:radial-gradient(circle at 20% 20%,rgba(250,35,59,.35),transparent 26%),radial-gradient(circle at 80% 20%,rgba(132,64,255,.25),transparent 30%);filter:blur(18px);opacity:.85}
-.music-player-wrap{position:relative;display:grid;grid-template-columns:260px 1fr;gap:30px;align-items:center;padding:28px}
-.album-frame{width:260px;height:260px;border-radius:30px;overflow:hidden;background:#000;box-shadow:0 25px 70px rgba(0,0,0,.55);position:relative}
-.video-mini{width:100%;height:100%;border:0;background:#000;transform:scale(1.02)}
-.album-glow{position:absolute;inset:auto 20px -26px;height:55px;background:#fa233b;filter:blur(35px);opacity:.35}
-.player-info{min-width:0}
-.kicker{display:inline-flex;gap:8px;align-items:center;color:#ff8a98;background:rgba(250,35,59,.14);border:1px solid rgba(250,35,59,.22);padding:8px 12px;border-radius:999px;font-size:13px;font-weight:700;margin-bottom:16px}
-.player-info h2{font-size:36px;line-height:1.12;margin:0 0 10px;letter-spacing:-.8px;max-width:900px}
-.player-info .channel{color:#b9b9c6;font-size:16px;margin-bottom:24px}
-.clean-controls{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;margin:20px 0}
-.play-circle{width:64px;height:64px;border-radius:50%;background:#fa233b;display:flex;align-items:center;justify-content:center;font-size:23px;box-shadow:0 14px 35px rgba(250,35,59,.35)}
-.progress-wrap{height:10px;border-radius:999px;background:rgba(255,255,255,.14);overflow:hidden}
-.progress-fill{height:100%;width:38%;border-radius:999px;background:linear-gradient(90deg,#fa233b,#ff7b91)}
-.full-label{color:#cfcfd8;font-size:14px;white-space:nowrap}
-.meta-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-.meta-pill{color:#d9d9e3;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);padding:8px 12px;border-radius:999px;font-size:13px}
-.note{color:#aaa;margin:14px 0;line-height:1.5}
-@media(max-width:800px){.header{display:block}.search{margin-top:16px}.page{padding:16px}.music-player-wrap{grid-template-columns:1fr;padding:18px}.album-frame{width:100%;height:auto;aspect-ratio:16/9;border-radius:24px}.player-info h2{font-size:24px}.clean-controls{grid-template-columns:auto 1fr}.full-label{display:none}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 25% 10%,rgba(250,35,59,.28),transparent 30%),
+    radial-gradient(circle at 75% 5%,rgba(113,80,255,.20),transparent 28%),
+    linear-gradient(180deg,#181820,#07070a 52%,#000);
+  color:white;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+}
+.page{
+  min-height:100vh;
+  padding:26px;
+}
+.header{
+  max-width:1180px;
+  margin:0 auto 22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+}
+.logo h1{font-size:32px;letter-spacing:-.5px}
+.logo p{color:#aaa;margin-top:6px}
+.search{
+  display:flex;
+  gap:10px;
+  width:min(560px,100%);
+}
+.search input{
+  flex:1;
+  padding:14px 18px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.09);
+  color:white;
+  outline:none;
+}
+.btn{
+  border:0;
+  border-radius:999px;
+  background:#fa233b;
+  color:white;
+  padding:13px 20px;
+  font-weight:800;
+  text-decoration:none;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.player-card{
+  max-width:1180px;
+  margin:0 auto;
+  border-radius:38px;
+  overflow:hidden;
+  background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.045));
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 35px 120px rgba(0,0,0,.58);
+  position:relative;
+}
+.player-card:before{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background:
+    radial-gradient(circle at 18% 15%,rgba(250,35,59,.35),transparent 24%),
+    radial-gradient(circle at 82% 5%,rgba(120,90,255,.25),transparent 30%);
+  filter:blur(18px);
+  opacity:.7;
+}
+.player-layout{
+  position:relative;
+  display:grid;
+  grid-template-columns:330px 1fr;
+  gap:34px;
+  align-items:center;
+  padding:34px;
+}
+.video-box{
+  width:330px;
+  height:330px;
+  border-radius:34px;
+  overflow:hidden;
+  background:#000;
+  box-shadow:0 30px 80px rgba(0,0,0,.65);
+  position:relative;
+}
+.video-box iframe{
+  width:100%;
+  height:100%;
+  border:0;
+  background:#000;
+}
+.video-box:after{
+  content:"";
+  position:absolute;
+  left:32px;
+  right:32px;
+  bottom:-28px;
+  height:60px;
+  background:#fa233b;
+  filter:blur(40px);
+  opacity:.35;
+}
+.now-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 14px;
+  border-radius:999px;
+  background:rgba(250,35,59,.16);
+  border:1px solid rgba(250,35,59,.25);
+  color:#ff9aaa;
+  font-size:13px;
+  font-weight:800;
+  margin-bottom:18px;
+}
+.title{
+  font-size:40px;
+  line-height:1.12;
+  letter-spacing:-1px;
+  margin-bottom:10px;
+}
+.channel{
+  color:#c5c5d0;
+  font-size:16px;
+  margin-bottom:24px;
+}
+.progress{
+  display:grid;
+  grid-template-columns:44px 1fr 48px;
+  align-items:center;
+  gap:12px;
+  color:#cfcfd8;
+  font-size:13px;
+  margin:20px 0;
+}
+.bar{
+  height:7px;
+  border-radius:999px;
+  background:rgba(255,255,255,.16);
+  position:relative;
+}
+.bar:before{
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:42%;
+  border-radius:999px;
+  background:#fff;
+}
+.bar:after{
+  content:"";
+  position:absolute;
+  left:42%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:15px;
+  height:15px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 18px rgba(255,255,255,.45);
+}
+.controls{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:26px;
+  margin:24px 0;
+}
+.icon{
+  font-size:24px;
+  color:#f2f2f6;
+  opacity:.9;
+}
+.pause{
+  width:78px;
+  height:78px;
+  border-radius:50%;
+  background:#fff;
+  color:#111;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:38px;
+  font-weight:900;
+  box-shadow:0 18px 45px rgba(255,255,255,.18);
+}
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:22px 0;
+}
+.actions span{
+  padding:9px 13px;
+  border-radius:999px;
+  background:rgba(255,255,255,.085);
+  border:1px solid rgba(255,255,255,.10);
+  color:#ddd;
+  font-size:13px;
+}
+.lyrics{
+  margin-top:22px;
+  padding:18px;
+  border-radius:26px;
+  background:rgba(255,255,255,.075);
+  border:1px solid rgba(255,255,255,.10);
+  color:#cfcfd8;
+  line-height:1.7;
+}
+.lyrics h3{
+  text-align:center;
+  margin-bottom:10px;
+  color:white;
+}
+.api-warning{
+  max-width:900px;
+  margin:40px auto;
+  padding:26px;
+  border-radius:28px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+}
+@media(max-width:850px){
+  .page{padding:14px}
+  .header{display:block}
+  .logo{margin-bottom:16px}
+  .logo h1{font-size:26px}
+  .search{width:100%}
+  .player-card{border-radius:34px;max-width:430px}
+  .player-layout{display:block;padding:18px}
+  .video-box{
+    width:100%;
+    height:auto;
+    aspect-ratio:1/1;
+    border-radius:30px;
+    margin-bottom:22px;
+  }
+  .title{font-size:24px;line-height:1.18}
+  .channel{font-size:14px}
+  .progress{grid-template-columns:38px 1fr 42px}
+  .controls{gap:22px}
+  .pause{width:68px;height:68px;font-size:32px}
+  .actions{justify-content:space-between}
+  .lyrics{border-radius:24px}
+}
 </style>
 </head>
 <body>
 <div class="page">
-<div class="header">
-<div class="logo"><h1>🎧 ASHPLEX Full Song Mode</h1><p>YouTube API powered embedded playback for full songs</p></div>
-<a class="btn" href="/home">Back to ASHPLEX</a>
-</div>
-<form class="search" action="/youtube">
-<input name="q" value="{{q}}" placeholder="Search full song...">
-<button class="btn">Search</button>
-</form>
-<p class="note">ASHPLEX uses YouTube Data API to find an exact embeddable video, then plays it inside the app.</p>
-{% if video.ok %}
-<div class="phone-player-shell">
-  <div class="player-layout">
-    <div class="album-window">
-      <iframe class="video-mini" src="{{video.embed_url}}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  <div class="header">
+    <div class="logo">
+      <h1>🎧 ASHPLEX Player</h1>
+      <p>Your Mood. Your Music. Your World.</p>
     </div>
+    <form class="search" action="/youtube">
+      <input name="q" value="{{q}}" placeholder="Search full song...">
+      <button class="btn">Search</button>
+    </form>
+    <a class="btn" href="/home">Back</a>
+  </div>
 
-    <div>
-      <div class="now-tag">🎧 Playing inside ASHPLEX</div>
-      <h2 class="track-title">{{video.title}}</h2>
-      <p class="track-channel">{{video.channel}}</p>
-
-      <div class="progress-line">
-        <span>0:00</span>
-        <div class="bar"><div class="knob"></div></div>
-        <span>Full</span>
+  {% if video.ok %}
+  <div class="player-card">
+    <div class="player-layout">
+      <div class="video-box">
+        <iframe src="{{video.embed_url}}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
       </div>
 
-      <div class="player-buttons">
-        <span class="icon-btn">↝</span>
-        <span class="icon-btn">⏮</span>
-        <div class="main-pause">Ⅱ</div>
-        <span class="icon-btn">⏭</span>
-        <span class="icon-btn">↻</span>
-      </div>
+      <div>
+        <div class="now-badge">🎵 Now Playing inside ASHPLEX</div>
+        <h2 class="title">{{video.title}}</h2>
+        <p class="channel">{{video.channel}}</p>
 
-      <div class="action-row">
-        <span>♡ Like</span>
-        <span>☰ Queue</span>
-        <span>↗ Share</span>
-      </div>
+        <div class="progress">
+          <span>0:00</span>
+          <div class="bar"></div>
+          <span>Full</span>
+        </div>
 
-      <div class="lyrics-card">
-        <h3>Lyrics</h3>
-        <p>Music plays inside ASHPLEX with AI mood selection.<br>Your Mood. Your Music. Your World.</p>
+        <div class="controls">
+          <span class="icon">↝</span>
+          <span class="icon">⏮</span>
+          <div class="pause">Ⅱ</div>
+          <span class="icon">⏭</span>
+          <span class="icon">↻</span>
+        </div>
+
+        <div class="actions">
+          <span>♡ Like</span>
+          <span>☰ Queue</span>
+          <span>↗ Share</span>
+          <span>AI Mood</span>
+        </div>
+
+        <div class="lyrics">
+          <h3>Lyrics</h3>
+          <p>Music plays inside ASHPLEX with AI mood selection.<br>Your Mood. Your Music. Your World.</p>
+        </div>
       </div>
     </div>
   </div>
-</div>
-{% else %}
-<div class="card">
-  <h2>⚠️ YouTube API setup needed</h2>
-  <p class="note">{{video.error}}</p>
-  <p class="note">Add YOUTUBE_API_KEY in Render Environment Variables, then redeploy.</p>
-  <a class="btn" href="{{video.watch_url}}" target="_blank">Open fallback on YouTube</a>
-</div>
-{% endif %}
+  {% else %}
+  <div class="api-warning">
+    <h2>⚠️ YouTube API setup needed</h2>
+    <p style="color:#aaa;margin:12px 0">{{video.error}}</p>
+    <p style="color:#aaa">Add YOUTUBE_API_KEY in Render Environment Variables, then redeploy.</p>
+    <br>
+    <a class="btn" href="{{video.watch_url}}" target="_blank">Open fallback on YouTube</a>
+  </div>
+  {% endif %}
 </div>
 
 <script>
-document.querySelectorAll(".player-info h2").forEach(el=>{
-  const txt=document.createElement("textarea");
-  txt.innerHTML=el.innerHTML;
-  el.innerText=txt.value;
+document.querySelectorAll(".title").forEach(el=>{
+  const t=document.createElement("textarea");
+  t.innerHTML=el.innerHTML;
+  el.innerText=t.value;
 });
 </script>
 </body>
 </html>
 """
+
 
 DEVELOPER_HTML = """
 <!DOCTYPE html>
