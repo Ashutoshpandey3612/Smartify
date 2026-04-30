@@ -505,8 +505,15 @@ YOUTUBE_HTML = """
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:linear-gradient(180deg,#181820,#08080b 45%,#000);color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-.page{min-height:100vh;padding:28px}.header{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:24px}.logo h1{margin:0;font-size:34px}.logo p{color:#aaa;margin-top:6px}.search{display:flex;gap:10px;max-width:620px;width:100%}.search input{flex:1;padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:white}.btn{padding:13px 20px;border:0;border-radius:999px;background:#fa233b;color:white;text-decoration:none;font-weight:800;cursor:pointer}.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);border-radius:28px;padding:20px}iframe{width:100%;height:520px;border:0;border-radius:22px;background:#000}.note{color:#aaa;margin:14px 0;line-height:1.5}
-@media(max-width:800px){.header{display:block}.search{margin-top:16px}iframe{height:280px}.page{padding:16px}}
+.page{min-height:100vh;padding:28px}.header{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:24px}.logo h1{margin:0;font-size:34px}.logo p{color:#aaa;margin-top:6px}.search{display:flex;gap:10px;max-width:620px;width:100%}.search input{flex:1;padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:white}.btn{padding:13px 20px;border:0;border-radius:999px;background:#fa233b;color:white;text-decoration:none;font-weight:800;cursor:pointer}.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);border-radius:28px;padding:20px}.music-player-wrap{display:grid;grid-template-columns:320px 1fr;gap:22px;align-items:center}
+.video-mini{width:320px;height:180px;border:0;border-radius:22px;background:#000;box-shadow:0 22px 70px rgba(0,0,0,.45)}
+.player-info h2{font-size:30px;margin:0 0 8px}
+.player-info p{color:#aaa;line-height:1.5}
+.fake-controls{margin-top:18px;display:flex;align-items:center;gap:14px}
+.play-circle{width:54px;height:54px;border-radius:50%;background:#fa233b;display:flex;align-items:center;justify-content:center;font-size:20px}
+.wave{flex:1;height:8px;border-radius:20px;background:linear-gradient(90deg,#fa233b 40%,rgba(255,255,255,.14) 40%)}
+.note{color:#aaa;margin:14px 0;line-height:1.5}
+@media(max-width:800px){.header{display:block}.search{margin-top:16px}.page{padding:16px}.music-player-wrap{grid-template-columns:1fr}.video-mini{width:100%;height:190px}.player-info h2{font-size:24px}}
 </style>
 </head>
 <body>
@@ -522,8 +529,20 @@ body{margin:0;background:linear-gradient(180deg,#181820,#08080b 45%,#000);color:
 <p class="note">ASHPLEX uses YouTube Data API to find an exact embeddable video, then plays it inside the app.</p>
 {% if video.ok %}
 <div class="card">
-  <iframe src="{{video.embed_url}}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-  <p class="note"><b>Playing:</b> {{video.title}} · {{video.channel}}</p>
+  <div class="music-player-wrap">
+    <iframe class="video-mini" src="{{video.embed_url}}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <div class="player-info">
+      <p class="note">Now Playing inside ASHPLEX</p>
+      <h2>{{video.title}}</h2>
+      <p>{{video.channel}}</p>
+      <div class="fake-controls">
+        <div class="play-circle">▶</div>
+        <div class="wave"></div>
+        <span style="color:#aaa">Full Song</span>
+      </div>
+      <p class="note">Video is kept small because YouTube embedded playback includes video, while ASHPLEX keeps the music-app experience clean.</p>
+    </div>
+  </div>
 </div>
 {% else %}
 <div class="card">
