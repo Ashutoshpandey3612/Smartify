@@ -126,7 +126,7 @@ def ai_mood_query(mood="trending", level="medium"):
         },
         "trending": {
             "low": "90s hindi acoustic songs",
-            "medium": "bollywood 90s hindi songs",
+            "medium": "Kumar Sanu Udit Narayan Alka Yagnik 90s hindi songs",
             "high": "90s bollywood dance hits"
         }
     }
@@ -210,31 +210,84 @@ def get_youtube_video(query="arijit song"):
             "watch_url": youtube_search_url(query=query)
         }
 
-def get_deezer_songs(query="bollywood 90s hindi songs"):
+ALLOWED_90S_SINGERS = [
+    "Kumar Sanu",
+    "Udit Narayan",
+    "Alka Yagnik",
+    "Kavita Krishnamurthy",
+    "Anuradha Paudwal",
+    "Sadhana Sargam",
+    "Abhijeet",
+    "Abhijeet Bhattacharya",
+    "Sonu Nigam"
+]
+
+def is_allowed_90s_singer(title, artist):
+    text = f"{title} {artist}".lower()
+    return any(name.lower() in text for name in ALLOWED_90S_SINGERS)
+
+def singer_query_list():
+    return [
+        "Kumar Sanu 90s hindi songs",
+        "Udit Narayan 90s hindi songs",
+        "Alka Yagnik 90s hindi songs",
+        "Kavita Krishnamurthy 90s hindi songs",
+        "Anuradha Paudwal 90s hindi songs",
+        "Sadhana Sargam 90s hindi songs",
+        "Abhijeet 90s hindi songs",
+        "Sonu Nigam 90s hindi songs"
+    ]
+
+def get_deezer_songs(query="Kumar Sanu Udit Narayan Alka Yagnik 90s hindi songs"):
+    """
+    Fetch up to 50 Hindi 90s songs, restricted to selected singers only.
+    If user searches a custom query, it still filters results by allowed singers.
+    """
+    songs = []
+    seen = set()
+
+    # If default 90s Hindi search, search singer-wise for better filtered output.
+    default_terms = ["Kumar Sanu Udit Narayan Alka Yagnik 90s hindi songs", "90s hindi songs", "hindi 1990s songs"]
+    queries = singer_query_list() if (query or "").lower() in default_terms else [query]
+
     try:
-        url = f"https://api.deezer.com/search?q={quote_plus(query)}&limit=50"
-        data = requests.get(url, timeout=10).json()
+        for q in queries:
+            url = f"https://api.deezer.com/search?q={quote_plus(q)}&limit=50"
+            data = requests.get(url, timeout=10).json()
 
-        songs = []
-        for s in data.get("data", [])[:50]:
-            title = s.get("title", "Unknown")
-            artist = s.get("artist", {}).get("name", "Unknown")
-            cover = (
-                s.get("album", {}).get("cover_xl")
-                or s.get("album", {}).get("cover_big")
-                or s.get("album", {}).get("cover_medium", "")
-            )
+            for s in data.get("data", []):
+                title = s.get("title", "Unknown")
+                artist = s.get("artist", {}).get("name", "Unknown")
+                sid = s.get("id")
 
-            songs.append({
-                "id": s.get("id"),
-                "title": title,
-                "artist": artist,
-                "cover": cover,
-                "preview": s.get("preview", ""),
-                "youtube_url": youtube_search_url(title, artist),
-                "source": "Deezer + YouTube"
-            })
-        return songs
+                if sid in seen:
+                    continue
+
+                # Strict filter: only selected singers
+                if not is_allowed_90s_singer(title, artist):
+                    continue
+
+                cover = (
+                    s.get("album", {}).get("cover_xl")
+                    or s.get("album", {}).get("cover_big")
+                    or s.get("album", {}).get("cover_medium", "")
+                )
+
+                songs.append({
+                    "id": sid,
+                    "title": title,
+                    "artist": artist,
+                    "cover": cover,
+                    "preview": s.get("preview", ""),
+                    "youtube_url": youtube_search_url(title, artist),
+                    "source": "Deezer + YouTube"
+                })
+                seen.add(sid)
+
+                if len(songs) >= 50:
+                    return songs
+
+        return songs[:50]
     except Exception:
         return []
 
@@ -500,7 +553,7 @@ body{overflow:auto;background:radial-gradient(circle at top,#302a33,#08080b 55%,
 
 <main class="main">
 <div class="topbar">
-<form class="search" action="/home"><input name="q" value="{{query}}" placeholder="Search 90s Hindi / Bollywood songs..."></form>
+<form class="search" action="/home"><input name="q" value="{{query}}" placeholder="Search 90s singers only..."></form>
 <div class="user-pill">Hi, {{user}} · {{role}}</div>
 </div>
 
@@ -509,7 +562,7 @@ body{overflow:auto;background:radial-gradient(circle at top,#302a33,#08080b 55%,
 <div>
 <div class="eyebrow">ASHPLEX Hybrid Music</div>
 <h1>Your Mood.<br>Your Music.</h1>
-<p>Deezer API gives fast preview and metadata for Hindi/Bollywood discovery. YouTube gives full-song discovery.</p>
+<p>Deezer API shows 90s Hindi songs only from selected singers like Kumar Sanu, Udit Narayan, Alka Yagnik and Sonu Nigam. YouTube gives full-song discovery.</p>
 <p style="color:#ff8a98;font-weight:700">Created by Ashutosh Pandey</p>
 <a class="btn" href="/home">Play Mix</a>
 <a class="btn secondary" href="/youtube?q={{query}}">YouTube Full Mode</a>
@@ -541,7 +594,7 @@ body{overflow:auto;background:radial-gradient(circle at top,#302a33,#08080b 55%,
 <a class="source-badge" href="/youtube?q={{query}}">Open YouTube Full Song Mode</a>
 </div>
 
-<div class="section-row"><h2>Made For You</h2><span>{{songs|length}} Hindi/Bollywood preview tracks · {{query}}</span></div>
+<div class="section-row"><h2>Made For You</h2><span>{{songs|length}} Selected 90s singer preview tracks · {{query}}</span></div>
 
 <div class="grid">
 {% for s in songs %}
@@ -1116,9 +1169,9 @@ button,.btn{border:0;border-radius:999px;background:#fa233b;color:white;padding:
 <body>
 <div class="wrap">
 <h1>🔍 Search ASHPLEX</h1>
-<p class="tag">Search songs, artists or moods. Created by Ashutosh Pandey.</p>
+<p class="tag">Only selected 90s singers: Kumar Sanu, Udit Narayan, Alka Yagnik, Kavita Krishnamurthy, Anuradha Paudwal, Sadhana Sargam, Abhijeet, Sonu Nigam.</p>
 <form class="searchbox" action="/search">
-<input name="q" value="{{query}}" placeholder="Search 90s Hindi songs...">
+<input name="q" value="{{query}}" placeholder="Search selected 90s singers...">
 <button>Search</button>
 </form>
 
@@ -1173,7 +1226,7 @@ h1{font-size:34px;margin-bottom:8px}.tag{color:#aaa;margin-bottom:22px}
 <p class="tag">Your ASHPLEX mood collections and quick playlists.</p>
 
 <div class="cards">
-<a class="card" href="/home?q=bollywood 90s hindi songs"><h2>🔥 90s Hindi Mix</h2><p>Popular music selected for your day.</p><span class="btn">Open</span></a>
+<a class="card" href="/home?q=Kumar Sanu Udit Narayan Alka Yagnik 90s hindi songs"><h2>🔥 90s Hindi Mix</h2><p>Popular music selected for your day.</p><span class="btn">Open</span></a>
 <a class="card" href="/home?q=90s hindi romantic songs"><h2>❤️ 90s Romantic</h2><p>Love songs and soft mood tracks.</p><span class="btn">Open</span></a>
 <a class="card" href="/home?q=old hindi soft songs"><h2>🎯 Soft Classics</h2><p>Lofi and deep focus tracks.</p><span class="btn">Open</span></a>
 <a class="card" href="/home?q=90s bollywood dance hits"><h2>💃 Dance Hits</h2><p>High energy gym music.</p><span class="btn">Open</span></a>
@@ -1220,7 +1273,7 @@ input,select{width:100%;padding:14px 16px;border-radius:18px;border:1px solid rg
 <p class="tag">Create an instant AI mood mix.</p>
 <form action="/home">
 <label>Playlist name</label>
-<input name="q" placeholder="Example: 90s Hindi romantic mix">
+<input name="q" placeholder="Example: Kumar Sanu romantic songs">
 <label>Mood</label>
 <select name="mood"><option value="trending">Trending</option><option value="happy">Happy</option><option value="sad">Sad</option><option value="romantic">Romantic</option><option value="focus">Focus</option><option value="relax">Relax</option><option value="workout">Workout</option></select>
 <label>Level</label>
@@ -1404,7 +1457,7 @@ def home():
     if not query:
         query = ai_mood_query(mood, level)
     if not query:
-        query = "bollywood 90s hindi songs"
+        query = "Kumar Sanu Udit Narayan Alka Yagnik 90s hindi songs"
 
     songs = get_deezer_songs(query)
 
@@ -1419,7 +1472,7 @@ def home():
 @app.route("/youtube")
 @login_required
 def youtube_mode():
-    q = request.args.get("q", "bollywood 90s hindi songs")
+    q = request.args.get("q", "Kumar Sanu Udit Narayan Alka Yagnik 90s hindi songs")
     video = get_youtube_video(q)
     return render_template_string(
         YOUTUBE_HTML,
@@ -1432,7 +1485,7 @@ def youtube_mode():
 @app.route("/search")
 @login_required
 def search_page():
-    query = request.args.get("q", "bollywood 90s hindi songs").strip()
+    query = request.args.get("q", "Kumar Sanu Udit Narayan Alka Yagnik 90s hindi songs").strip()
     songs = get_deezer_songs(query)
     return render_template_string(SEARCH_HTML, query=query, songs=songs)
 
@@ -1524,12 +1577,12 @@ def api_play():
 
 @app.route("/api/deezer")
 def api_deezer():
-    q = request.args.get("q", "bollywood 90s hindi songs")
+    q = request.args.get("q", "Kumar Sanu Udit Narayan Alka Yagnik 90s hindi songs")
     return jsonify({"query": q, "songs": get_deezer_songs(q)})
 
 @app.route("/api/youtube")
 def api_youtube():
-    q = request.args.get("q", "bollywood 90s hindi songs")
+    q = request.args.get("q", "Kumar Sanu Udit Narayan Alka Yagnik 90s hindi songs")
     video = get_youtube_video(q)
     return jsonify({
         "query": q,
