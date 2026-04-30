@@ -15,6 +15,7 @@ DB_PATH = os.path.join(BASE_DIR, "ashplex_users.db")
 
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "ashutosh")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Ashplex@123")
+YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 
 def db():
     con = sqlite3.connect(DB_PATH)
@@ -141,6 +142,73 @@ def youtube_search_url(title="", artist="", query=""):
 
 def youtube_embed_url(query=""):
     return "https://www.youtube.com/embed?listType=search&list=" + quote_plus(query + " song")
+
+def get_youtube_video(query="arijit song"):
+    """
+    Uses official YouTube Data API v3 to get exact videoId.
+    This fixes 'This video is unavailable' caused by search-list iframe embed.
+    """
+    if not YOUTUBE_API_KEY:
+        return {
+            "ok": False,
+            "error": "YOUTUBE_API_KEY missing",
+            "video_id": "",
+            "title": "",
+            "channel": "",
+            "embed_url": "",
+            "watch_url": youtube_search_url(query=query)
+        }
+
+    try:
+        url = "https://www.googleapis.com/youtube/v3/search"
+        params = {
+            "part": "snippet",
+            "q": query + " song",
+            "type": "video",
+            "maxResults": 1,
+            "videoEmbeddable": "true",
+            "safeSearch": "none",
+            "key": YOUTUBE_API_KEY
+        }
+
+        data = requests.get(url, params=params, timeout=10).json()
+
+        items = data.get("items", [])
+        if not items:
+            return {
+                "ok": False,
+                "error": "No embeddable video found",
+                "video_id": "",
+                "title": "",
+                "channel": "",
+                "embed_url": "",
+                "watch_url": youtube_search_url(query=query)
+            }
+
+        item = items[0]
+        video_id = item["id"]["videoId"]
+        title = item["snippet"]["title"]
+        channel = item["snippet"]["channelTitle"]
+
+        return {
+            "ok": True,
+            "error": "",
+            "video_id": video_id,
+            "title": title,
+            "channel": channel,
+            "embed_url": f"https://www.youtube.com/embed/{video_id}?autoplay=1&rel=0",
+            "watch_url": f"https://www.youtube.com/watch?v={video_id}"
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "error": str(e),
+            "video_id": "",
+            "title": "",
+            "channel": "",
+            "embed_url": "",
+            "watch_url": youtube_search_url(query=query)
+        }
 
 def get_deezer_songs(query="arijit"):
     try:
@@ -333,7 +401,7 @@ body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-sy
 {% if role == 'developer' %}<a href="/developer"><span>⚙</span> Developer Panel</a>{% endif %}
 <a href="/wallet"><span>🎁</span> Rewards</a>
 <a href="/account"><span>⚙</span> Account</a>
-<a href="/youtube?q={{query}}" ><span>▶</span> Full Song Mode</a>
+<a href="/youtube?q={{query}}" ><span>▶</span> YouTube Full Mode</a>
 <a href="/logout"><span>⇥</span> Logout</a>
 </nav>
 </aside>
@@ -349,9 +417,9 @@ body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-sy
 <div>
 <div class="eyebrow">ASHPLEX Hybrid Music</div>
 <h1>Your Mood.<br>Your Music.</h1>
-<p>Deezer API gives fast preview and metadata. YouTube embedded player plays full songs inside ASHPLEX.</p>
+<p>Deezer API gives fast preview and metadata. YouTube gives full-song discovery.</p>
 <a class="btn" href="/home">Play Mix</a>
-<a class="btn secondary" href="/youtube?q={{query}}">Full Song Mode</a>
+<a class="btn secondary" href="/youtube?q={{query}}">YouTube Full Mode</a>
 </div>
 </section>
 
@@ -376,8 +444,8 @@ body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-sy
 
 <div class="hybrid-box">
 <h3>🌐 Hybrid Full Song Source</h3>
-<p style="color:#aaa;margin:8px 0 12px">Preview on ASHPLEX via Deezer. Full song opens inside ASHPLEX using YouTube embedded player.</p>
-<a class="source-badge" href="/youtube?q={{query}}">Open Full Song in ASHPLEX Mode</a>
+<p style="color:#aaa;margin:8px 0 12px">Preview on ASHPLEX via Deezer. Full song option opens YouTube search/player.</p>
+<a class="source-badge" href="/youtube?q={{query}}">Open YouTube Full Song Mode</a>
 </div>
 
 <div class="section-row"><h2>Made For You</h2><span>{{songs|length}} Deezer preview tracks · {{query}}</span></div>
@@ -408,7 +476,7 @@ body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-sy
 <script>
 const audio=document.getElementById("audio");const playBtn=document.getElementById("playBtn");
 function playSong(src,title,artist,cover){
-  if(!src){alert("Preview not available. Use Full Song in ASHPLEX button.");return;}
+  if(!src){alert("Preview not available. Use YouTube Full Song button.");return;}
   audio.src=src;
   document.getElementById("nowTitle").innerText=title;
   document.getElementById("nowArtist").innerText=artist;
@@ -432,7 +500,7 @@ YOUTUBE_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-<title>ASHPLEX Full Song in ASHPLEX</title>
+<title>ASHPLEX YouTube Full Song</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 *{box-sizing:border-box}
@@ -444,15 +512,27 @@ body{margin:0;background:linear-gradient(180deg,#181820,#08080b 45%,#000);color:
 <body>
 <div class="page">
 <div class="header">
-<div class="logo"><h1>🎧 ASHPLEX Full Song Mode</h1><p>Full songs play inside ASHPLEX using YouTube embedded playback</p></div>
+<div class="logo"><h1>🎧 ASHPLEX Full Song Mode</h1><p>YouTube API powered embedded playback for full songs</p></div>
 <a class="btn" href="/home">Back to ASHPLEX</a>
 </div>
 <form class="search" action="/youtube">
 <input name="q" value="{{q}}" placeholder="Search full song...">
 <button class="btn">Search</button>
 </form>
-<p class="note">ASHPLEX controls mood recommendation and user experience. YouTube is embedded inside ASHPLEX as the full-song playback source.</p>
-<div class="card"><iframe src="{{embed_url}}" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
+<p class="note">ASHPLEX uses YouTube Data API to find an exact embeddable video, then plays it inside the app.</p>
+{% if video.ok %}
+<div class="card">
+  <iframe src="{{video.embed_url}}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  <p class="note"><b>Playing:</b> {{video.title}} · {{video.channel}}</p>
+</div>
+{% else %}
+<div class="card">
+  <h2>⚠️ YouTube API setup needed</h2>
+  <p class="note">{{video.error}}</p>
+  <p class="note">Add YOUTUBE_API_KEY in Render Environment Variables, then redeploy.</p>
+  <a class="btn" href="{{video.watch_url}}" target="_blank">Open fallback on YouTube</a>
+</div>
+{% endif %}
 </div>
 </body>
 </html>
@@ -611,11 +691,13 @@ def home():
 @login_required
 def youtube_mode():
     q = request.args.get("q", "arijit song")
+    video = get_youtube_video(q)
     return render_template_string(
         YOUTUBE_HTML,
         q=q,
-        embed_url=youtube_embed_url(q)
+        video=video
     )
+
 
 @app.route("/developer")
 @developer_required
@@ -701,11 +783,13 @@ def api_deezer():
 @app.route("/api/youtube")
 def api_youtube():
     q = request.args.get("q", "arijit")
+    video = get_youtube_video(q)
     return jsonify({
         "query": q,
-        "youtube_search_url": youtube_search_url(query=q),
-        "youtube_embed_url": youtube_embed_url(q)
+        "video": video,
+        "youtube_search_url": youtube_search_url(query=q)
     })
+
 
 @app.route("/api/user-stats")
 @login_required
