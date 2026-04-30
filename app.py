@@ -125,9 +125,9 @@ def ai_mood_query(mood="trending", level="medium"):
             "high": "aggressive workout music"
         },
         "trending": {
-            "low": "acoustic hits",
-            "medium": "arijit",
-            "high": "trending dance hits"
+            "low": "90s hindi acoustic songs",
+            "medium": "bollywood 90s hindi songs",
+            "high": "90s bollywood dance hits"
         }
     }
 
@@ -210,13 +210,13 @@ def get_youtube_video(query="arijit song"):
             "watch_url": youtube_search_url(query=query)
         }
 
-def get_deezer_songs(query="arijit"):
+def get_deezer_songs(query="bollywood 90s hindi songs"):
     try:
-        url = f"https://api.deezer.com/search?q={quote_plus(query)}"
+        url = f"https://api.deezer.com/search?q={quote_plus(query)}&limit=50"
         data = requests.get(url, timeout=10).json()
 
         songs = []
-        for s in data.get("data", [])[:18]:
+        for s in data.get("data", [])[:50]:
             title = s.get("title", "Unknown")
             artist = s.get("artist", {}).get("name", "Unknown")
             cover = (
@@ -309,7 +309,7 @@ body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#3a1d2f,
 h1{font-size:36px;margin:0 0 4px}.tag{color:#b8b8c6;font-size:13px;margin-bottom:24px}
 input{width:100%;padding:14px;margin:8px 0;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);border-radius:16px;color:white}
 button{width:100%;padding:14px;margin-top:12px;border:0;background:#fa233b;color:white;border-radius:18px;font-weight:800;cursor:pointer}
-a{color:#ff8a98}.small{font-size:12px;color:#aaa;margin-top:14px;line-height:1.6}
+a{color:#ff8a98}.small{font-size:12px;color:#aaa;margin-top:14px;line-height:1.6}.creator{margin-top:18px;color:#ff8a98;font-size:13px;font-weight:700}
 </style>
 </head>
 <body>
@@ -328,6 +328,7 @@ a{color:#ff8a98}.small{font-size:12px;color:#aaa;margin-top:14px;line-height:1.6
 Developer: ashutosh / Ashplex@123<br>
 New customer? <a href="/register">Create account</a>
 </div>
+<div class="creator">Created by Ashutosh Pandey</div>
 </div>
 
 <script>
@@ -367,6 +368,7 @@ a{color:#ff8a98}.small{font-size:12px;color:#aaa;margin-top:14px}
 <button>Create Account</button>
 </form>
 <div class="small">Already have account? <a href="/">Login</a></div>
+<div class="creator">Created by Ashutosh Pandey</div>
 </div>
 
 <script>
@@ -392,7 +394,7 @@ APP_HTML = """
 body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;overflow:hidden}
 .app{width:100vw;height:100vh;display:grid;grid-template-columns:250px 1fr;grid-template-rows:1fr 92px;background:#08080b}
 .sidebar{grid-row:1/2;background:rgba(18,18,23,.96);border-right:1px solid rgba(255,255,255,.08);padding:24px 18px}
-.brand{display:flex;align-items:center;gap:10px;margin-bottom:28px}.brand-icon{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--red),#ff7b91);display:flex;align-items:center;justify-content:center;font-size:21px}.brand h2{font-size:20px}.brand p{font-size:11px;color:var(--muted)}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:28px}.brand-icon{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--red),#ff7b91);display:flex;align-items:center;justify-content:center;font-size:21px}.brand h2{font-size:20px}.brand p{font-size:11px;color:var(--muted)}.created-by{font-size:11px;color:#ff8a98;margin-top:4px;font-weight:700}
 .nav-title{color:#777785;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin:20px 10px 8px}
 .nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;color:#c9c9d3;text-decoration:none;border-radius:12px;font-size:15px;margin:3px 0}.nav a:hover,.nav a.active{background:rgba(255,255,255,.08);color:white}
 .main{overflow-y:auto;padding:26px 34px 120px;background:radial-gradient(circle at 75% -10%, rgba(250,35,59,.20), transparent 32%),linear-gradient(180deg,#181820,#09090d 45%,#000)}
@@ -484,7 +486,7 @@ body{overflow:auto;background:radial-gradient(circle at top,#302a33,#08080b 55%,
 <body>
 <div class="app">
 <aside class="sidebar">
-<div class="brand"><div class="brand-icon">🎧</div><div><h2>ASHPLEX</h2><p>Your Mood. Your Music. Your World.</p></div></div>
+<div class="brand"><div class="brand-icon">🎧</div><div><h2>ASHPLEX</h2><p>Your Mood. Your Music. Your World.</p><p style="color:#ff8a98;font-weight:700">Created by Ashutosh Pandey</p><div class="created-by">Created by Ashutosh Pandey</div></div></div>
 <nav class="nav">
 <div class="nav-title">Library</div>
 <a class="active" href="/home"><span>⌂</span> Listen Now</a>
@@ -498,7 +500,7 @@ body{overflow:auto;background:radial-gradient(circle at top,#302a33,#08080b 55%,
 
 <main class="main">
 <div class="topbar">
-<form class="search" action="/home"><input name="q" value="{{query}}" placeholder="Search Deezer preview songs..."></form>
+<form class="search" action="/home"><input name="q" value="{{query}}" placeholder="Search 90s Hindi / Bollywood songs..."></form>
 <div class="user-pill">Hi, {{user}} · {{role}}</div>
 </div>
 
@@ -507,7 +509,8 @@ body{overflow:auto;background:radial-gradient(circle at top,#302a33,#08080b 55%,
 <div>
 <div class="eyebrow">ASHPLEX Hybrid Music</div>
 <h1>Your Mood.<br>Your Music.</h1>
-<p>Deezer API gives fast preview and metadata. YouTube gives full-song discovery.</p>
+<p>Deezer API gives fast preview and metadata for Hindi/Bollywood discovery. YouTube gives full-song discovery.</p>
+<p style="color:#ff8a98;font-weight:700">Created by Ashutosh Pandey</p>
 <a class="btn" href="/home">Play Mix</a>
 <a class="btn secondary" href="/youtube?q={{query}}">YouTube Full Mode</a>
 </div>
@@ -538,7 +541,7 @@ body{overflow:auto;background:radial-gradient(circle at top,#302a33,#08080b 55%,
 <a class="source-badge" href="/youtube?q={{query}}">Open YouTube Full Song Mode</a>
 </div>
 
-<div class="section-row"><h2>Made For You</h2><span>{{songs|length}} Deezer preview tracks · {{query}}</span></div>
+<div class="section-row"><h2>Made For You</h2><span>{{songs|length}} Hindi/Bollywood preview tracks · {{query}}</span></div>
 
 <div class="grid">
 {% for s in songs %}
@@ -563,10 +566,10 @@ body{overflow:auto;background:radial-gradient(circle at top,#302a33,#08080b 55%,
 
 <nav class="mobile-bottom-nav">
   <a class="active" href="/home"><span>🏠</span>Home</a>
-  <a href="/home"><span>🔍</span>Search</a>
-  <a href="/home?mood=trending&level=medium"><span>🎧</span>Library</a>
+  <a href="/search"><span>🔍</span>Search</a>
+  <a href="/library"><span>🎧</span>Library</a>
   <a href="/wallet"><span>🎁</span>Rewards</a>
-  <a href="/youtube?q={{query}}"><span>➕</span>Create</a>
+  <a href="/create"><span>➕</span>Create</a>
 </nav>
 </div>
 
@@ -976,10 +979,10 @@ body{
 
 <nav class="bottom-nav">
   <a href="/home"><span>🏠</span>Home</a>
-  <a href="/home"><span>🔍</span>Search</a>
+  <a href="/search"><span>🔍</span>Search</a>
   <a class="active" href="/youtube?q={{q}}"><span>🎧</span>Playing</a>
   <a href="/wallet"><span>🎁</span>Rewards</a>
-  <a href="/home"><span>➕</span>Create</a>
+  <a href="/create"><span>➕</span>Create</a>
 </nav>
 
 <script>
@@ -1085,6 +1088,159 @@ function bindPlayerControls(){
 """
 
 
+
+SEARCH_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+<title>ASHPLEX Search</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:radial-gradient(circle at top,#222236,#07070a 55%,#000);color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;padding:22px}
+.wrap{max-width:980px;margin:auto}
+h1{font-size:34px;margin-bottom:8px}.tag{color:#aaa;margin-bottom:22px}
+.searchbox{display:flex;gap:10px;margin-bottom:24px}
+input{flex:1;padding:15px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.09);color:white;outline:none}
+button,.btn{border:0;border-radius:999px;background:#fa233b;color:white;padding:14px 20px;font-weight:800;text-decoration:none;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}
+.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:13px;text-decoration:none;color:white}
+.card img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:16px;margin-bottom:10px}
+.card h3{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card p{font-size:12px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;height:76px;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.96));backdrop-filter:blur(22px);display:grid;grid-template-columns:repeat(5,1fr);align-items:center;border-top:1px solid rgba(255,255,255,.08)}
+.bottom-nav a{color:#c9c9d3;text-decoration:none;text-align:center;font-size:11px;font-weight:600}.bottom-nav a span{display:block;font-size:23px;margin-bottom:4px}.bottom-nav a.active{color:white;text-shadow:0 0 14px rgba(250,35,59,.55)}
+@media(min-width:851px){.bottom-nav{display:none}body{padding-bottom:22px}}
+@media(max-width:850px){body{padding-bottom:100px}.searchbox{display:block}button{width:100%;margin-top:10px}.grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🔍 Search ASHPLEX</h1>
+<p class="tag">Search songs, artists or moods. Created by Ashutosh Pandey.</p>
+<form class="searchbox" action="/search">
+<input name="q" value="{{query}}" placeholder="Search 90s Hindi songs...">
+<button>Search</button>
+</form>
+
+<div class="grid">
+{% for s in songs %}
+<a class="card" href="/youtube?q={{s.title}} {{s.artist}}">
+<img src="{{s.cover}}">
+<h3>{{s.title}}</h3>
+<p>{{s.artist}}</p>
+</a>
+{% else %}
+<p style="color:#aaa">Search to see songs.</p>
+{% endfor %}
+</div>
+</div>
+
+<nav class="bottom-nav">
+  <a href="/home"><span>🏠</span>Home</a>
+  <a class="active" href="/search"><span>🔍</span>Search</a>
+  <a href="/library"><span>🎧</span>Library</a>
+  <a href="/wallet"><span>🎁</span>Rewards</a>
+  <a href="/create"><span>➕</span>Create</a>
+</nav>
+</body>
+</html>
+"""
+
+LIBRARY_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+<title>ASHPLEX Library</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:radial-gradient(circle at top,#2b1d2b,#07070a 55%,#000);color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;padding:22px}
+.wrap{max-width:980px;margin:auto}
+h1{font-size:34px;margin-bottom:8px}.tag{color:#aaa;margin-bottom:22px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:26px;padding:20px;text-decoration:none;color:white}
+.card h2{font-size:22px;margin-bottom:10px}.card p{color:#aaa;line-height:1.5}
+.btn{display:inline-block;margin-top:14px;border-radius:999px;background:#fa233b;color:white;padding:11px 16px;font-weight:800;text-decoration:none}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;height:76px;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.96));backdrop-filter:blur(22px);display:grid;grid-template-columns:repeat(5,1fr);align-items:center;border-top:1px solid rgba(255,255,255,.08)}
+.bottom-nav a{color:#c9c9d3;text-decoration:none;text-align:center;font-size:11px;font-weight:600}.bottom-nav a span{display:block;font-size:23px;margin-bottom:4px}.bottom-nav a.active{color:white;text-shadow:0 0 14px rgba(250,35,59,.55)}
+@media(min-width:851px){.bottom-nav{display:none}body{padding-bottom:22px}}
+@media(max-width:850px){body{padding-bottom:100px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🎧 Your Library</h1>
+<p class="tag">Your ASHPLEX mood collections and quick playlists.</p>
+
+<div class="cards">
+<a class="card" href="/home?q=bollywood 90s hindi songs"><h2>🔥 90s Hindi Mix</h2><p>Popular music selected for your day.</p><span class="btn">Open</span></a>
+<a class="card" href="/home?q=90s hindi romantic songs"><h2>❤️ 90s Romantic</h2><p>Love songs and soft mood tracks.</p><span class="btn">Open</span></a>
+<a class="card" href="/home?q=old hindi soft songs"><h2>🎯 Soft Classics</h2><p>Lofi and deep focus tracks.</p><span class="btn">Open</span></a>
+<a class="card" href="/home?q=90s bollywood dance hits"><h2>💃 Dance Hits</h2><p>High energy gym music.</p><span class="btn">Open</span></a>
+<a class="card" href="/wallet"><h2>🎁 Rewards</h2><p>Check your daily listening reward progress.</p><span class="btn">View</span></a>
+</div>
+</div>
+
+<nav class="bottom-nav">
+  <a href="/home"><span>🏠</span>Home</a>
+  <a href="/search"><span>🔍</span>Search</a>
+  <a class="active" href="/library"><span>🎧</span>Library</a>
+  <a href="/wallet"><span>🎁</span>Rewards</a>
+  <a href="/create"><span>➕</span>Create</a>
+</nav>
+</body>
+</html>
+"""
+
+CREATE_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+<title>ASHPLEX Create</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:radial-gradient(circle at top,#2d2032,#07070a 55%,#000);color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;padding:22px}
+.wrap{max-width:760px;margin:auto}
+.box{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:30px;padding:24px}
+h1{font-size:34px;margin-bottom:8px}.tag{color:#aaa;margin-bottom:22px}
+label{display:block;color:#aaa;margin:12px 0 6px}
+input,select{width:100%;padding:14px 16px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.09);color:white;outline:none}
+.btn{display:inline-block;margin-top:18px;border:0;border-radius:999px;background:#fa233b;color:white;padding:13px 20px;font-weight:800;text-decoration:none;cursor:pointer}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;height:76px;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.96));backdrop-filter:blur(22px);display:grid;grid-template-columns:repeat(5,1fr);align-items:center;border-top:1px solid rgba(255,255,255,.08)}
+.bottom-nav a{color:#c9c9d3;text-decoration:none;text-align:center;font-size:11px;font-weight:600}.bottom-nav a span{display:block;font-size:23px;margin-bottom:4px}.bottom-nav a.active{color:white;text-shadow:0 0 14px rgba(250,35,59,.55)}
+@media(min-width:851px){.bottom-nav{display:none}body{padding-bottom:22px}}
+@media(max-width:850px){body{padding-bottom:100px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="box">
+<h1>➕ Create Mix</h1>
+<p class="tag">Create an instant AI mood mix.</p>
+<form action="/home">
+<label>Playlist name</label>
+<input name="q" placeholder="Example: 90s Hindi romantic mix">
+<label>Mood</label>
+<select name="mood"><option value="trending">Trending</option><option value="happy">Happy</option><option value="sad">Sad</option><option value="romantic">Romantic</option><option value="focus">Focus</option><option value="relax">Relax</option><option value="workout">Workout</option></select>
+<label>Level</label>
+<select name="level"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select>
+<button class="btn">Generate Playlist</button>
+</form>
+</div>
+</div>
+
+<nav class="bottom-nav">
+  <a href="/home"><span>🏠</span>Home</a>
+  <a href="/search"><span>🔍</span>Search</a>
+  <a href="/library"><span>🎧</span>Library</a>
+  <a href="/wallet"><span>🎁</span>Rewards</a>
+  <a class="active" href="/create"><span>➕</span>Create</a>
+</nav>
+</body>
+</html>
+"""
+
 DEVELOPER_HTML = """
 <!DOCTYPE html>
 <html>
@@ -1102,7 +1258,7 @@ body{margin:0;background:radial-gradient(circle at top right,rgba(250,35,59,.22)
 <body>
 <div class="page">
 <div class="header">
-<div><h1>🎧 ASHPLEX Developer Panel</h1><p style="color:#aaa">Deezer + YouTube hybrid platform with customer analytics.</p></div>
+<div><h1>🎧 ASHPLEX Developer Panel</h1><p style="color:#aaa">Deezer + YouTube hybrid platform with customer analytics.</p><p style="color:#ff8a98;font-weight:700">Created by Ashutosh Pandey</p></div>
 <div><a class="btn secondary" href="/home">Open App</a> <a class="btn secondary" href="/logout">Logout</a></div>
 </div>
 
@@ -1247,6 +1403,8 @@ def home():
 
     if not query:
         query = ai_mood_query(mood, level)
+    if not query:
+        query = "bollywood 90s hindi songs"
 
     songs = get_deezer_songs(query)
 
@@ -1261,7 +1419,7 @@ def home():
 @app.route("/youtube")
 @login_required
 def youtube_mode():
-    q = request.args.get("q", "arijit song")
+    q = request.args.get("q", "bollywood 90s hindi songs")
     video = get_youtube_video(q)
     return render_template_string(
         YOUTUBE_HTML,
@@ -1269,6 +1427,24 @@ def youtube_mode():
         video=video
     )
 
+
+
+@app.route("/search")
+@login_required
+def search_page():
+    query = request.args.get("q", "bollywood 90s hindi songs").strip()
+    songs = get_deezer_songs(query)
+    return render_template_string(SEARCH_HTML, query=query, songs=songs)
+
+@app.route("/library")
+@login_required
+def library_page():
+    return render_template_string(LIBRARY_HTML)
+
+@app.route("/create")
+@login_required
+def create_page():
+    return render_template_string(CREATE_HTML)
 
 @app.route("/developer")
 @developer_required
@@ -1348,12 +1524,12 @@ def api_play():
 
 @app.route("/api/deezer")
 def api_deezer():
-    q = request.args.get("q", "arijit")
+    q = request.args.get("q", "bollywood 90s hindi songs")
     return jsonify({"query": q, "songs": get_deezer_songs(q)})
 
 @app.route("/api/youtube")
 def api_youtube():
-    q = request.args.get("q", "arijit")
+    q = request.args.get("q", "bollywood 90s hindi songs")
     video = get_youtube_video(q)
     return jsonify({
         "query": q,
