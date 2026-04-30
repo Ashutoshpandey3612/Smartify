@@ -333,7 +333,7 @@ body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-sy
 {% if role == 'developer' %}<a href="/developer"><span>⚙</span> Developer Panel</a>{% endif %}
 <a href="/wallet"><span>🎁</span> Rewards</a>
 <a href="/account"><span>⚙</span> Account</a>
-<a href="/youtube?q={{query}}" ><span>▶</span> YouTube Full Mode</a>
+<a href="/youtube?q={{query}}" ><span>▶</span> Full Song Mode</a>
 <a href="/logout"><span>⇥</span> Logout</a>
 </nav>
 </aside>
@@ -349,9 +349,9 @@ body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-sy
 <div>
 <div class="eyebrow">ASHPLEX Hybrid Music</div>
 <h1>Your Mood.<br>Your Music.</h1>
-<p>Deezer API gives fast preview and metadata. YouTube gives full-song discovery.</p>
+<p>Deezer API gives fast preview and metadata. YouTube embedded player plays full songs inside ASHPLEX.</p>
 <a class="btn" href="/home">Play Mix</a>
-<a class="btn secondary" href="/youtube?q={{query}}">YouTube Full Mode</a>
+<a class="btn secondary" href="/youtube?q={{query}}">Full Song Mode</a>
 </div>
 </section>
 
@@ -376,8 +376,8 @@ body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-sy
 
 <div class="hybrid-box">
 <h3>🌐 Hybrid Full Song Source</h3>
-<p style="color:#aaa;margin:8px 0 12px">Preview on ASHPLEX via Deezer. Full song option opens YouTube search/player.</p>
-<a class="source-badge" href="/youtube?q={{query}}">Open YouTube Full Song Mode</a>
+<p style="color:#aaa;margin:8px 0 12px">Preview on ASHPLEX via Deezer. Full song opens inside ASHPLEX using YouTube embedded player.</p>
+<a class="source-badge" href="/youtube?q={{query}}">Open Full Song in ASHPLEX Mode</a>
 </div>
 
 <div class="section-row"><h2>Made For You</h2><span>{{songs|length}} Deezer preview tracks · {{query}}</span></div>
@@ -386,7 +386,7 @@ body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-sy
 {% for s in songs %}
 <div class="card" onclick="playSong('{{s.preview}}','{{s.title|e}}','{{s.artist|e}}','{{s.cover}}')">
 <div class="card-cover">{% if s.cover %}<img src="{{s.cover}}">{% else %}<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:35px">🎵</div>{% endif %}<div class="play-badge">▶</div></div>
-<div><h3>{{s.title}}</h3><p>{{s.artist}}</p><a class="yt-btn" href="{{s.youtube_url}}" target="_blank" onclick="event.stopPropagation()">▶ YouTube Full Song</a></div>
+<div><h3>{{s.title}}</h3><p>{{s.artist}}</p><a class="yt-btn" href="/youtube?q={{s.title}} {{s.artist}}" onclick="event.stopPropagation()">▶ Play Full in ASHPLEX</a></div>
 </div>
 {% else %}
 <p style="color:#aaa">No songs found. Try another search.</p>
@@ -408,7 +408,7 @@ body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-sy
 <script>
 const audio=document.getElementById("audio");const playBtn=document.getElementById("playBtn");
 function playSong(src,title,artist,cover){
-  if(!src){alert("Preview not available. Use YouTube Full Song button.");return;}
+  if(!src){alert("Preview not available. Use Full Song in ASHPLEX button.");return;}
   audio.src=src;
   document.getElementById("nowTitle").innerText=title;
   document.getElementById("nowArtist").innerText=artist;
@@ -432,7 +432,7 @@ YOUTUBE_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-<title>ASHPLEX YouTube Full Song</title>
+<title>ASHPLEX Full Song in ASHPLEX</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 *{box-sizing:border-box}
@@ -444,14 +444,14 @@ body{margin:0;background:linear-gradient(180deg,#181820,#08080b 45%,#000);color:
 <body>
 <div class="page">
 <div class="header">
-<div class="logo"><h1>🎧 ASHPLEX Full Song Mode</h1><p>YouTube embedded playback for unlimited full songs</p></div>
+<div class="logo"><h1>🎧 ASHPLEX Full Song Mode</h1><p>Full songs play inside ASHPLEX using YouTube embedded playback</p></div>
 <a class="btn" href="/home">Back to ASHPLEX</a>
 </div>
 <form class="search" action="/youtube">
 <input name="q" value="{{q}}" placeholder="Search full song...">
 <button class="btn">Search</button>
 </form>
-<p class="note">ASHPLEX controls mood recommendation and user experience. YouTube is used as scalable full-song content source.</p>
+<p class="note">ASHPLEX controls mood recommendation and user experience. YouTube is embedded inside ASHPLEX as the full-song playback source.</p>
 <div class="card"><iframe src="{{embed_url}}" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>
 </div>
 </body>
