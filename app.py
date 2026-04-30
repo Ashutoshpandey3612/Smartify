@@ -240,31 +240,63 @@ def singer_query_list():
 
 def get_deezer_songs(query="Kumar Sanu Udit Narayan Alka Yagnik 90s hindi songs"):
     """
-    Fetch up to 50 Hindi 90s songs, restricted to selected singers only.
-    If user searches a custom query, it still filters results by allowed singers.
+    Fetch up to 50 songs focused on selected 90s singers.
+    Important: Deezer artist field is not always the singer name, so we search singer-wise
+    and keep results instead of over-strict filtering that returns blank.
     """
     songs = []
     seen = set()
 
-    # If default 90s Hindi search, search singer-wise for better filtered output.
-    default_terms = ["Kumar Sanu Udit Narayan Alka Yagnik 90s hindi songs", "90s hindi songs", "hindi 1990s songs"]
-    queries = singer_query_list() if (query or "").lower() in default_terms else [query]
+    singers = [
+        "Kumar Sanu",
+        "Udit Narayan",
+        "Alka Yagnik",
+        "Kavita Krishnamurthy",
+        "Anuradha Paudwal",
+        "Sadhana Sargam",
+        "Abhijeet",
+        "Sonu Nigam"
+    ]
+
+    # If user searches manually, use that. Otherwise singer-wise search.
+    q = (query or "").strip()
+    default_mode = (
+        not q
+        or "90s" in q.lower()
+        or "udit" in q.lower()
+        or "kumar" in q.lower()
+        or "alka" in q.lower()
+    )
+
+    search_queries = []
+    if default_mode:
+        for singer in singers:
+            search_queries.extend([
+                f"{singer} hindi songs",
+                f"{singer} bollywood songs",
+                f"{singer} 90s songs"
+            ])
+    else:
+        search_queries = [q]
 
     try:
-        for q in queries:
-            url = f"https://api.deezer.com/search?q={quote_plus(q)}&limit=50"
+        for search_query in search_queries:
+            url = f"https://api.deezer.com/search?q={quote_plus(search_query)}&limit=25"
             data = requests.get(url, timeout=10).json()
 
             for s in data.get("data", []):
-                title = s.get("title", "Unknown")
-                artist = s.get("artist", {}).get("name", "Unknown")
                 sid = s.get("id")
-
                 if sid in seen:
                     continue
 
-                # Strict filter: only selected singers
-                if not is_allowed_90s_singer(title, artist):
+                title = s.get("title", "Unknown")
+                artist = s.get("artist", {}).get("name", "Unknown")
+                album_title = s.get("album", {}).get("title", "")
+
+                # Remove obvious English/random results, but do not over-filter.
+                combined = f"{title} {artist} {album_title}".lower()
+                blocked_words = ["remix workout", "english podcast", "karaoke"]
+                if any(b in combined for b in blocked_words):
                     continue
 
                 cover = (
@@ -273,15 +305,27 @@ def get_deezer_songs(query="Kumar Sanu Udit Narayan Alka Yagnik 90s hindi songs"
                     or s.get("album", {}).get("cover_medium", "")
                 )
 
+                # Use the searched singer as display hint if Deezer artist is album/label.
+                singer_hint = ""
+                for singer in singers:
+                    if singer.lower() in search_query.lower():
+                        singer_hint = singer
+                        break
+
+                display_artist = artist
+                if singer_hint and singer_hint.lower() not in artist.lower():
+                    display_artist = f"{singer_hint} • {artist}"
+
                 songs.append({
                     "id": sid,
                     "title": title,
-                    "artist": artist,
+                    "artist": display_artist,
                     "cover": cover,
                     "preview": s.get("preview", ""),
-                    "youtube_url": youtube_search_url(title, artist),
+                    "youtube_url": youtube_search_url(title, singer_hint or artist),
                     "source": "Deezer + YouTube"
                 })
+
                 seen.add(sid)
 
                 if len(songs) >= 50:
@@ -1169,7 +1213,7 @@ button,.btn{border:0;border-radius:999px;background:#fa233b;color:white;padding:
 <body>
 <div class="wrap">
 <h1>🔍 Search ASHPLEX</h1>
-<p class="tag">Only selected 90s singers: Kumar Sanu, Udit Narayan, Alka Yagnik, Kavita Krishnamurthy, Anuradha Paudwal, Sadhana Sargam, Abhijeet, Sonu Nigam.</p>
+<p class="tag">Focused on selected 90s singers: Kumar Sanu, Udit Narayan, Alka Yagnik, Kavita Krishnamurthy, Anuradha Paudwal, Sadhana Sargam, Abhijeet, Sonu Nigam.</p>
 <form class="searchbox" action="/search">
 <input name="q" value="{{query}}" placeholder="Search selected 90s singers...">
 <button>Search</button>
