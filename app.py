@@ -329,6 +329,14 @@ Developer: ashutosh / Ashplex@123<br>
 New customer? <a href="/register">Create account</a>
 </div>
 </div>
+
+<script>
+document.querySelectorAll(".player-info h2").forEach(el=>{
+  const txt=document.createElement("textarea");
+  txt.innerHTML=el.innerHTML;
+  el.innerText=txt.value;
+});
+</script>
 </body>
 </html>
 """
@@ -360,6 +368,14 @@ a{color:#ff8a98}.small{font-size:12px;color:#aaa;margin-top:14px}
 </form>
 <div class="small">Already have account? <a href="/">Login</a></div>
 </div>
+
+<script>
+document.querySelectorAll(".player-info h2").forEach(el=>{
+  const txt=document.createElement("textarea");
+  txt.innerHTML=el.innerHTML;
+  el.innerText=txt.value;
+});
+</script>
 </body>
 </html>
 """
@@ -388,7 +404,36 @@ body{min-height:100vh;background:#08080b;color:var(--text);font-family:-apple-sy
 .section-row{display:flex;align-items:center;justify-content:space-between;margin:10px 0 16px}.section-row h2{font-size:26px}.section-row span{color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:20px}.card{background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:14px;transition:.25s;cursor:pointer}.card:hover{transform:translateY(-7px);background:rgba(255,255,255,.10);box-shadow:0 22px 55px rgba(0,0,0,.35)}.card-cover{width:100%;aspect-ratio:1/1;border-radius:18px;overflow:hidden;background:#222;margin-bottom:12px;position:relative}.card-cover img{width:100%;height:100%;object-fit:cover}.play-badge{position:absolute;right:10px;bottom:10px;width:42px;height:42px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s}.card:hover .play-badge{opacity:1}.card h3{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}.card p{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.yt-btn{display:inline-flex;margin-top:10px;padding:8px 11px;border-radius:999px;background:#ff0033;color:white;text-decoration:none;font-size:12px;font-weight:800}
 .player{grid-column:1/3;background:rgba(12,12,16,.92);backdrop-filter:blur(28px);border-top:1px solid rgba(255,255,255,.10);display:grid;grid-template-columns:320px 1fr 260px;align-items:center;padding:14px 28px;z-index:20}.now{display:flex;align-items:center;gap:14px;min-width:0}.now-cover{width:60px;height:60px;border-radius:14px;overflow:hidden;background:#222}.now-cover img{width:100%;height:100%;object-fit:cover}.now h3{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.now p{color:var(--muted);font-size:12px}.controls{display:flex;align-items:center;justify-content:center;gap:18px}.control{border:0;color:white;background:transparent;font-size:22px;cursor:pointer}.play{width:46px;height:46px;border-radius:50%;background:white;color:#000}.hidden-audio{display:none}.volume{justify-self:end;color:#aaa}
-@media(max-width:850px){body{overflow:auto}.app{display:block;min-height:100vh;height:auto;padding-bottom:92px}.sidebar{display:none}.main{padding:18px 16px 120px;min-height:100vh}.topbar{display:block}.search{max-width:none;margin-bottom:14px}.user-pill{display:inline-block}.hero{display:block;padding:20px;border-radius:28px;min-height:auto}.hero-cover{width:100%;height:auto;aspect-ratio:1/1;max-width:330px;margin:0 auto 22px}.hero div:last-child{text-align:center}.hero h1{font-size:46px}.mood-ai-form{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.card{display:grid;grid-template-columns:86px 1fr;gap:14px;align-items:center}.card-cover{margin:0}.player{position:fixed;left:0;right:0;bottom:0;grid-template-columns:1fr auto;padding:12px 16px}.controls .control:not(.play),.volume{display:none}}
+@media(max-width:850px){
+body{overflow:auto;background:radial-gradient(circle at top,#302a33,#08080b 55%,#000)}
+.app{display:block;min-height:100vh;height:auto;padding-bottom:92px}
+.sidebar{display:none}
+.main{padding:14px 14px 120px;min-height:100vh;background:radial-gradient(circle at top left,rgba(250,35,59,.20),transparent 35%),linear-gradient(180deg,#17171d,#07070a)}
+.topbar{display:block;margin-bottom:16px}
+.search{max-width:none;margin-bottom:12px}
+.search input{border-radius:999px;padding:15px 18px}
+.user-pill{display:inline-block;border-radius:999px}
+.hero{display:block;padding:18px;border-radius:34px;min-height:auto;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.05));box-shadow:0 22px 70px rgba(0,0,0,.45)}
+.hero-cover{width:100%;height:auto;aspect-ratio:1/1;max-width:320px;margin:0 auto 22px;border-radius:32px}
+.hero div:last-child{text-align:left}
+.hero h1{font-size:38px;line-height:1.02;letter-spacing:-1px;text-align:left}
+.hero p{font-size:14px;line-height:1.5}
+.hero .btn{padding:12px 18px}
+.mood-ai-box{border-radius:28px;padding:16px}
+.mood-ai-form{grid-template-columns:1fr}
+.hybrid-box{border-radius:28px}
+.grid{grid-template-columns:1fr;gap:12px}
+.card{display:grid;grid-template-columns:74px 1fr;gap:14px;align-items:center;border-radius:22px;padding:12px;background:rgba(255,255,255,.075)}
+.card:hover{transform:none}
+.card-cover{margin:0;border-radius:18px}
+.play-badge{opacity:1;width:34px;height:34px}
+.yt-btn{font-size:11px;padding:7px 10px}
+.player{position:fixed;left:10px;right:10px;bottom:10px;grid-template-columns:1fr auto;height:72px;border-radius:24px;padding:10px 14px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.now-cover{width:52px;height:52px;border-radius:16px}
+.controls{justify-content:flex-end}
+.controls .control:not(.play),.volume{display:none}
+.play{width:46px;height:46px}
+}
 </style>
 </head>
 <body>
@@ -492,6 +537,14 @@ function playSong(src,title,artist,cover){
 playBtn.addEventListener("click",()=>{if(audio.paused){audio.play();playBtn.innerText="⏸";fetch("/api/play");}else{audio.pause();playBtn.innerText="▶"}});
 audio.addEventListener("ended",()=>{playBtn.innerText="▶"});
 </script>
+
+<script>
+document.querySelectorAll(".player-info h2").forEach(el=>{
+  const txt=document.createElement("textarea");
+  txt.innerHTML=el.innerHTML;
+  el.innerText=txt.value;
+});
+</script>
 </body>
 </html>
 """
@@ -505,15 +558,25 @@ YOUTUBE_HTML = """
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:linear-gradient(180deg,#181820,#08080b 45%,#000);color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-.page{min-height:100vh;padding:28px}.header{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:24px}.logo h1{margin:0;font-size:34px}.logo p{color:#aaa;margin-top:6px}.search{display:flex;gap:10px;max-width:620px;width:100%}.search input{flex:1;padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:white}.btn{padding:13px 20px;border:0;border-radius:999px;background:#fa233b;color:white;text-decoration:none;font-weight:800;cursor:pointer}.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);border-radius:28px;padding:20px}.music-player-wrap{display:grid;grid-template-columns:320px 1fr;gap:22px;align-items:center}
-.video-mini{width:320px;height:180px;border:0;border-radius:22px;background:#000;box-shadow:0 22px 70px rgba(0,0,0,.45)}
-.player-info h2{font-size:30px;margin:0 0 8px}
-.player-info p{color:#aaa;line-height:1.5}
-.fake-controls{margin-top:18px;display:flex;align-items:center;gap:14px}
-.play-circle{width:54px;height:54px;border-radius:50%;background:#fa233b;display:flex;align-items:center;justify-content:center;font-size:20px}
-.wave{flex:1;height:8px;border-radius:20px;background:linear-gradient(90deg,#fa233b 40%,rgba(255,255,255,.14) 40%)}
+.page{min-height:100vh;padding:28px}.header{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:24px}.logo h1{margin:0;font-size:34px}.logo p{color:#aaa;margin-top:6px}.search{display:flex;gap:10px;max-width:620px;width:100%}.search input{flex:1;padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:white}.btn{padding:13px 20px;border:0;border-radius:999px;background:#fa233b;color:white;text-decoration:none;font-weight:800;cursor:pointer}.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);border-radius:28px;padding:20px}.music-card{position:relative;overflow:hidden;border-radius:34px;background:linear-gradient(135deg,rgba(255,255,255,.13),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.12);box-shadow:0 35px 110px rgba(0,0,0,.55)}
+.music-card::before{content:"";position:absolute;inset:-40%;background:radial-gradient(circle at 20% 20%,rgba(250,35,59,.35),transparent 26%),radial-gradient(circle at 80% 20%,rgba(132,64,255,.25),transparent 30%);filter:blur(18px);opacity:.85}
+.music-player-wrap{position:relative;display:grid;grid-template-columns:260px 1fr;gap:30px;align-items:center;padding:28px}
+.album-frame{width:260px;height:260px;border-radius:30px;overflow:hidden;background:#000;box-shadow:0 25px 70px rgba(0,0,0,.55);position:relative}
+.video-mini{width:100%;height:100%;border:0;background:#000;transform:scale(1.02)}
+.album-glow{position:absolute;inset:auto 20px -26px;height:55px;background:#fa233b;filter:blur(35px);opacity:.35}
+.player-info{min-width:0}
+.kicker{display:inline-flex;gap:8px;align-items:center;color:#ff8a98;background:rgba(250,35,59,.14);border:1px solid rgba(250,35,59,.22);padding:8px 12px;border-radius:999px;font-size:13px;font-weight:700;margin-bottom:16px}
+.player-info h2{font-size:36px;line-height:1.12;margin:0 0 10px;letter-spacing:-.8px;max-width:900px}
+.player-info .channel{color:#b9b9c6;font-size:16px;margin-bottom:24px}
+.clean-controls{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;margin:20px 0}
+.play-circle{width:64px;height:64px;border-radius:50%;background:#fa233b;display:flex;align-items:center;justify-content:center;font-size:23px;box-shadow:0 14px 35px rgba(250,35,59,.35)}
+.progress-wrap{height:10px;border-radius:999px;background:rgba(255,255,255,.14);overflow:hidden}
+.progress-fill{height:100%;width:38%;border-radius:999px;background:linear-gradient(90deg,#fa233b,#ff7b91)}
+.full-label{color:#cfcfd8;font-size:14px;white-space:nowrap}
+.meta-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.meta-pill{color:#d9d9e3;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);padding:8px 12px;border-radius:999px;font-size:13px}
 .note{color:#aaa;margin:14px 0;line-height:1.5}
-@media(max-width:800px){.header{display:block}.search{margin-top:16px}.page{padding:16px}.music-player-wrap{grid-template-columns:1fr}.video-mini{width:100%;height:190px}.player-info h2{font-size:24px}}
+@media(max-width:800px){.header{display:block}.search{margin-top:16px}.page{padding:16px}.music-player-wrap{grid-template-columns:1fr;padding:18px}.album-frame{width:100%;height:auto;aspect-ratio:16/9;border-radius:24px}.player-info h2{font-size:24px}.clean-controls{grid-template-columns:auto 1fr}.full-label{display:none}}
 </style>
 </head>
 <body>
@@ -528,19 +591,41 @@ body{margin:0;background:linear-gradient(180deg,#181820,#08080b 45%,#000);color:
 </form>
 <p class="note">ASHPLEX uses YouTube Data API to find an exact embeddable video, then plays it inside the app.</p>
 {% if video.ok %}
-<div class="card">
-  <div class="music-player-wrap">
-    <iframe class="video-mini" src="{{video.embed_url}}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-    <div class="player-info">
-      <p class="note">Now Playing inside ASHPLEX</p>
-      <h2>{{video.title}}</h2>
-      <p>{{video.channel}}</p>
-      <div class="fake-controls">
-        <div class="play-circle">▶</div>
-        <div class="wave"></div>
-        <span style="color:#aaa">Full Song</span>
+<div class="phone-player-shell">
+  <div class="player-layout">
+    <div class="album-window">
+      <iframe class="video-mini" src="{{video.embed_url}}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
+
+    <div>
+      <div class="now-tag">🎧 Playing inside ASHPLEX</div>
+      <h2 class="track-title">{{video.title}}</h2>
+      <p class="track-channel">{{video.channel}}</p>
+
+      <div class="progress-line">
+        <span>0:00</span>
+        <div class="bar"><div class="knob"></div></div>
+        <span>Full</span>
       </div>
-      <p class="note">Video is kept small because YouTube embedded playback includes video, while ASHPLEX keeps the music-app experience clean.</p>
+
+      <div class="player-buttons">
+        <span class="icon-btn">↝</span>
+        <span class="icon-btn">⏮</span>
+        <div class="main-pause">Ⅱ</div>
+        <span class="icon-btn">⏭</span>
+        <span class="icon-btn">↻</span>
+      </div>
+
+      <div class="action-row">
+        <span>♡ Like</span>
+        <span>☰ Queue</span>
+        <span>↗ Share</span>
+      </div>
+
+      <div class="lyrics-card">
+        <h3>Lyrics</h3>
+        <p>Music plays inside ASHPLEX with AI mood selection.<br>Your Mood. Your Music. Your World.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -553,6 +638,14 @@ body{margin:0;background:linear-gradient(180deg,#181820,#08080b 45%,#000);color:
 </div>
 {% endif %}
 </div>
+
+<script>
+document.querySelectorAll(".player-info h2").forEach(el=>{
+  const txt=document.createElement("textarea");
+  txt.innerHTML=el.innerHTML;
+  el.innerText=txt.value;
+});
+</script>
 </body>
 </html>
 """
@@ -603,6 +696,14 @@ body{margin:0;background:radial-gradient(circle at top right,rgba(250,35,59,.22)
 </table>
 </div>
 </div>
+
+<script>
+document.querySelectorAll(".player-info h2").forEach(el=>{
+  const txt=document.createElement("textarea");
+  txt.innerHTML=el.innerHTML;
+  el.innerText=txt.value;
+});
+</script>
 </body>
 </html>
 """
@@ -612,7 +713,15 @@ ACCOUNT_HTML = """
 <html>
 <head><title>ASHPLEX Account</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>
 body{margin:0;min-height:100vh;background:#08080b;color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;display:flex;align-items:center;justify-content:center}.card{width:440px;background:rgba(255,255,255,.08);border-radius:24px;padding:28px}.btn{display:inline-block;margin-top:18px;padding:12px 18px;border-radius:999px;background:#fa233b;color:white;text-decoration:none;border:0;font-weight:700;cursor:pointer}.secondary{background:rgba(255,255,255,.12)}.danger{background:#b00020}.row{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between}</style></head>
-<body><div class="card"><h1>🎧 ASHPLEX Account</h1><p style="color:#aaa">Your account is saved in database for future login.</p><div class="row"><span>Username</span><b>{{user}}</b></div><div class="row"><span>Role</span><b>{{role}}</b></div><a class="btn secondary" href="/home">Back</a> <a class="btn secondary" href="/logout">Logout</a>{% if role != 'developer' %}<form method="POST" action="/forget-account" onsubmit="return confirm('Delete account permanently?')"><button class="btn danger">Forget / Delete My Account</button></form>{% endif %}</div></body></html>
+<body><div class="card"><h1>🎧 ASHPLEX Account</h1><p style="color:#aaa">Your account is saved in database for future login.</p><div class="row"><span>Username</span><b>{{user}}</b></div><div class="row"><span>Role</span><b>{{role}}</b></div><a class="btn secondary" href="/home">Back</a> <a class="btn secondary" href="/logout">Logout</a>{% if role != 'developer' %}<form method="POST" action="/forget-account" onsubmit="return confirm('Delete account permanently?')"><button class="btn danger">Forget / Delete My Account</button></form>{% endif %}</div>
+<script>
+document.querySelectorAll(".player-info h2").forEach(el=>{
+  const txt=document.createElement("textarea");
+  txt.innerHTML=el.innerHTML;
+  el.innerText=txt.value;
+});
+</script>
+</body></html>
 """
 
 WALLET_HTML = """
@@ -637,6 +746,14 @@ h1{margin:0 0 10px}.big{font-size:48px;color:#ff8a98;font-weight:800}.muted{colo
 <p>{{today_plays}} / 20 songs listened today</p>
 <a class="btn" href="/home">Back to Music</a>
 </div>
+
+<script>
+document.querySelectorAll(".player-info h2").forEach(el=>{
+  const txt=document.createElement("textarea");
+  txt.innerHTML=el.innerHTML;
+  el.innerText=txt.value;
+});
+</script>
 </body>
 </html>
 """
